@@ -4,47 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Productivity Operations Dashboard</title>
+<title>Productividad y Detalle Operativo</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
 
 :root {
     --navy: #062f61;
-    --navy-dark: #03244a;
-    --blue: #0b5cab;
-    --blue-light: #eaf3ff;
+    --navy2: #073b76;
+    --blue: #1689d8;
+    --blue-light: #eaf5ff;
     --bg: #f4f7fb;
     --card: #ffffff;
-    --text: #1f2937;
+    --text: #202b38;
     --muted: #6b7280;
-    --border: #d8e0ea;
-    --success: #16803c;
-    --warning: #c77d00;
-    --danger: #c62828;
+    --border: #d9e1ea;
+    --green: #16803c;
+    --yellow: #c78300;
+    --red: #c62828;
+    --purple: #6b46c1;
     --shadow: 0 3px 12px rgba(0,0,0,.07);
 }
 
 body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
     background: var(--bg);
     color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 header {
-    background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+    background: linear-gradient(
+        135deg,
+        #03244a,
+        #073d78
+    );
     color: white;
     padding: 22px 28px;
 }
 
-.header-content {
-    max-width: 1600px;
+.header-inner {
+    max-width: 1700px;
     margin: auto;
 }
 
@@ -55,40 +61,43 @@ header h1 {
 
 header p {
     margin: 0;
-    opacity: .85;
     font-size: 14px;
+    opacity: .85;
 }
 
 .container {
-    width: min(1600px, calc(100% - 32px));
-    margin: 20px auto 40px;
+    width: min(1700px, calc(100% - 30px));
+    margin: 20px auto 50px;
 }
+
+/* =====================================================
+   UPLOAD
+===================================================== */
 
 .upload-box {
     background: white;
-    border: 2px dashed #b9c7d8;
+    border: 2px dashed #b7c6d8;
     border-radius: 12px;
-    padding: 22px;
-    margin-bottom: 20px;
+    padding: 20px;
     box-shadow: var(--shadow);
+    margin-bottom: 18px;
 }
 
 .upload-box h2 {
-    margin: 0 0 8px;
     color: var(--navy);
+    margin: 0 0 7px;
     font-size: 18px;
 }
 
 .upload-box p {
     color: var(--muted);
-    margin: 5px 0 16px;
+    margin: 5px 0 15px;
 }
 
-input[type="file"] {
-    display: block;
+input[type=file] {
     width: 100%;
-    max-width: 550px;
-    padding: 12px;
+    max-width: 600px;
+    padding: 11px;
     border: 1px solid var(--border);
     border-radius: 7px;
     background: white;
@@ -99,16 +108,21 @@ input[type="file"] {
     padding: 10px 13px;
     border-radius: 7px;
     display: none;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .status.show {
     display: block;
 }
 
+.status.info {
+    background: #eaf5ff;
+    color: #075394;
+}
+
 .status.success {
     background: #e8f7ed;
-    color: #12652f;
+    color: #14642f;
 }
 
 .status.error {
@@ -116,24 +130,23 @@ input[type="file"] {
     color: #9e2020;
 }
 
-.status.info {
-    background: #eaf3ff;
-    color: #074b91;
-}
+/* =====================================================
+   TABS
+===================================================== */
 
 .tabs {
     display: flex;
-    gap: 5px;
-    margin-bottom: 18px;
+    gap: 4px;
     overflow-x: auto;
+    margin-bottom: 18px;
 }
 
 .tab-button {
     border: 0;
-    background: #e1e8f0;
-    color: #26384d;
-    padding: 12px 18px;
+    padding: 12px 16px;
     border-radius: 7px 7px 0 0;
+    background: #dfe7ef;
+    color: #25384d;
     cursor: pointer;
     font-weight: bold;
     white-space: nowrap;
@@ -152,49 +165,91 @@ input[type="file"] {
     display: block;
 }
 
+/* =====================================================
+   TITLES
+===================================================== */
+
 .section-title {
-    margin: 25px 0 12px;
     color: var(--navy);
-    font-size: 20px;
+    margin: 22px 0 12px;
+    font-size: 21px;
 }
+
+.sub-title {
+    color: var(--navy);
+    margin: 20px 0 10px;
+    font-size: 17px;
+}
+
+.note {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+/* =====================================================
+   KPI
+===================================================== */
 
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(150px, 1fr));
-    gap: 14px;
+    grid-template-columns:
+        repeat(6, minmax(150px, 1fr));
+    gap: 13px;
 }
 
 .kpi {
-    background: var(--card);
+    background: white;
     border-radius: 10px;
-    padding: 17px;
+    padding: 16px;
     box-shadow: var(--shadow);
     border-left: 4px solid var(--blue);
 }
 
-.kpi .label {
-    font-size: 12px;
+.kpi.green {
+    border-left-color: var(--green);
+}
+
+.kpi.yellow {
+    border-left-color: var(--yellow);
+}
+
+.kpi.red {
+    border-left-color: var(--red);
+}
+
+.kpi.purple {
+    border-left-color: var(--purple);
+}
+
+.kpi-label {
     color: var(--muted);
+    font-size: 11px;
     text-transform: uppercase;
     font-weight: bold;
 }
 
-.kpi .value {
+.kpi-value {
+    color: var(--navy);
     font-size: 27px;
     font-weight: bold;
-    color: var(--navy);
-    margin-top: 7px;
+    margin-top: 6px;
 }
 
-.kpi .sub {
-    font-size: 11px;
+.kpi-sub {
     color: var(--muted);
-    margin-top: 5px;
+    font-size: 11px;
+    margin-top: 4px;
 }
+
+/* =====================================================
+   CHARTS
+===================================================== */
 
 .chart-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
     gap: 18px;
     margin-top: 18px;
 }
@@ -202,7 +257,7 @@ input[type="file"] {
 .chart-card {
     background: white;
     border-radius: 10px;
-    padding: 18px;
+    padding: 17px;
     box-shadow: var(--shadow);
     min-height: 350px;
 }
@@ -212,22 +267,27 @@ input[type="file"] {
 }
 
 .chart-card h3 {
-    margin: 0 0 15px;
+    margin: 0 0 13px;
     color: var(--navy);
     font-size: 16px;
 }
 
 .chart-container {
     position: relative;
-    height: 290px;
+    height: 285px;
 }
+
+/* =====================================================
+   FILTERS
+===================================================== */
 
 .filters {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 10px;
+    grid-template-columns:
+        2fr 1fr 1fr 1fr;
+    gap: 9px;
     background: white;
-    padding: 14px;
+    padding: 13px;
     border-radius: 10px;
     box-shadow: var(--shadow);
     margin-bottom: 15px;
@@ -235,53 +295,66 @@ input[type="file"] {
 
 .filters input,
 .filters select {
-    min-width: 0;
     width: 100%;
-    padding: 10px 11px;
+    min-width: 0;
+    padding: 10px;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: white;
-    font-size: 14px;
 }
+
+.action {
+    border: 0;
+    background: var(--navy);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* =====================================================
+   TABLES
+===================================================== */
 
 .table-wrapper {
     overflow: auto;
     background: white;
-    border-radius: 8px;
+    border-radius: 9px;
     box-shadow: var(--shadow);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 950px;
+    min-width: 1050px;
 }
 
-thead th {
+th {
     background: var(--navy);
     color: white;
     text-align: left;
-    padding: 12px 11px;
-    font-size: 13px;
+    padding: 11px;
+    font-size: 12px;
     position: sticky;
     top: 0;
     z-index: 2;
 }
 
-tbody td {
-    padding: 11px;
-    border-bottom: 1px solid #e2e7ed;
-    font-size: 13px;
+td {
+    padding: 10px;
+    border-bottom: 1px solid #e4e8ed;
+    font-size: 12px;
     vertical-align: top;
 }
 
-tbody tr:hover {
-    background: #f6f9fd;
+tr:hover td {
+    background: #f7faff;
 }
 
 .case-number {
-    font-weight: bold;
     color: var(--navy);
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 .datetime {
@@ -291,59 +364,84 @@ tbody tr:hover {
 
 .badge {
     display: inline-block;
-    padding: 4px 8px;
     border-radius: 12px;
-    font-size: 11px;
+    padding: 4px 8px;
     background: #edf2f7;
+    font-size: 11px;
 }
 
-.repeat-badge {
-    background: #fff0d5;
-    color: #8a5700;
-    font-weight: bold;
-}
-
-.ok-badge {
+.badge-green {
     background: #e8f7ed;
-    color: #12652f;
+    color: #12642f;
 }
 
-.incongruencia {
-    background: #fff8e8;
+.badge-yellow {
+    background: #fff2d6;
+    color: #875900;
+}
+
+.badge-red {
+    background: #fdeaea;
+    color: #9c2222;
+}
+
+.badge-purple {
+    background: #eee8ff;
+    color: #5838a1;
+}
+
+.row-warning td {
+    background: #fff9ed;
+}
+
+.row-critical td {
+    background: #fff0f0;
 }
 
 .empty {
-    padding: 30px;
     text-align: center;
     color: var(--muted);
+    padding: 30px;
 }
 
-.legend-box {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
+/* =====================================================
+   OPERATIONAL
+===================================================== */
+
+.operational-grid {
+    display: grid;
+    grid-template-columns:
+        1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
 }
 
-.summary-note {
-    color: var(--muted);
-    font-size: 13px;
-    margin: 8px 0 15px;
-}
-
-.agent-card {
+.operational-card {
     background: white;
-    border-radius: 9px;
+    border-radius: 10px;
+    padding: 18px;
     box-shadow: var(--shadow);
-    padding: 15px;
-    margin-bottom: 10px;
 }
 
-.agent-header {
+.operational-card h3 {
+    margin: 0 0 15px;
+    color: var(--navy);
+    font-size: 16px;
+}
+
+.agent-item {
+    padding: 11px 0;
+    border-bottom: 1px solid #e7ebf0;
+}
+
+.agent-item:last-child {
+    border-bottom: 0;
+}
+
+.agent-head {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    align-items: center;
 }
 
 .agent-name {
@@ -351,12 +449,16 @@ tbody tr:hover {
     color: var(--navy);
 }
 
+.agent-value {
+    font-weight: bold;
+}
+
 .progress {
-    height: 8px;
-    background: #e5eaf0;
+    margin-top: 7px;
+    height: 7px;
     border-radius: 20px;
+    background: #e8edf2;
     overflow: hidden;
-    margin-top: 9px;
 }
 
 .progress-bar {
@@ -364,46 +466,46 @@ tbody tr:hover {
     background: var(--blue);
 }
 
-.small {
-    font-size: 12px;
-    color: var(--muted);
+.topic-list {
+    max-height: 360px;
+    overflow: auto;
 }
 
-.repeat-details {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #4b5563;
-}
-
-button.action {
-    background: var(--navy);
-    color: white;
-    border: 0;
-    padding: 9px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button.action:hover {
-    background: var(--blue);
-}
-
-.actions {
+.topic-item {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #e7ebf0;
 }
 
-@media (max-width: 1200px) {
+.topic-name {
+    font-weight: bold;
+}
+
+.topic-count {
+    font-weight: bold;
+    color: var(--navy);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:1200px) {
+
     .kpi-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns:
+            repeat(3, 1fr);
     }
+
 }
 
-@media (max-width: 800px) {
+@media(max-width:850px) {
+
     .kpi-grid,
     .chart-grid,
+    .operational-grid,
     .filters {
         grid-template-columns: 1fr;
     }
@@ -413,745 +515,1448 @@ button.action:hover {
     }
 
     .container {
-        width: calc(100% - 18px);
+        width: calc(100% - 16px);
     }
 
     header {
         padding: 18px;
     }
 }
+
 </style>
 </head>
 
 <body>
 
 <header>
-    <div class="header-content">
-        <h1>📊 Productivity Operations Dashboard</h1>
-        <p>Análisis de productividad, actividades, registros e incongruencias operativas</p>
+
+    <div class="header-inner">
+
+        <h1>
+            📊 Productivity & Operations Dashboard
+        </h1>
+
+        <p>
+            Productividad, tiempos, asignaciones,
+            modificaciones y detalle operativo
+        </p>
+
     </div>
+
 </header>
+
 
 <main class="container">
 
-    <section class="upload-box">
-        <h2>📁 Cargar base de actividades</h2>
-        <p>
-            Carga el archivo Excel que se genera durante la operación.
-            El procesamiento se realiza directamente en este navegador.
-        </p>
+<!-- =====================================================
+     UPLOAD
+===================================================== -->
+
+<section class="upload-box">
+
+    <h2>
+        📁 Cargar base de Excel
+    </h2>
+
+    <p>
+        Carga el reporte de Gestión de Asignaciones.
+        El archivo se procesa completamente en el navegador.
+    </p>
+
+    <input
+        type="file"
+        id="fileInput"
+        accept=".xlsx,.xls,.csv"
+    >
+
+    <div
+        id="status"
+        class="status">
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     TABS
+===================================================== -->
+
+<div class="tabs">
+
+    <button
+        class="tab-button active"
+        data-tab="dashboard">
+        📊 Dashboard
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="daily">
+        📅 Por día
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="monthly">
+        🗓️ Por mes
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="yearly">
+        📆 Por año
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="inconsistencies">
+        ⚠️ Incongruencias
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="detail">
+        📋 Detalle de actividades
+    </button>
+
+    <button
+        class="tab-button"
+        data-tab="operational">
+        🔎 Detalle operativo
+    </button>
+
+</div>
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<section
+    id="dashboard"
+    class="tab active">
+
+    <h2 class="section-title">
+        Resumen gerencial
+    </h2>
+
+    <div class="kpi-grid">
+
+        <div class="kpi">
+            <div class="kpi-label">
+                Casos
+            </div>
+
+            <div
+                id="kpiCases"
+                class="kpi-value">
+                0
+            </div>
+
+            <div class="kpi-sub">
+                Casos identificados
+            </div>
+        </div>
+
+
+        <div class="kpi">
+            <div class="kpi-label">
+                Registros
+            </div>
+
+            <div
+                id="kpiRecords"
+                class="kpi-value">
+                0
+            </div>
+
+            <div class="kpi-sub">
+                Eventos de asignación
+            </div>
+        </div>
+
+
+        <div class="kpi green">
+            <div class="kpi-label">
+                Agentes
+            </div>
+
+            <div
+                id="kpiAgents"
+                class="kpi-value">
+                0
+            </div>
+
+            <div class="kpi-sub">
+                Propietarios actuales
+            </div>
+        </div>
+
+
+        <div class="kpi yellow">
+            <div class="kpi-label">
+                > 1 hora
+            </div>
+
+            <div
+                id="kpi1h"
+                class="kpi-value">
+                0
+            </div>
+
+            <div class="kpi-sub">
+                Casos con antigüedad
+            </div>
+        </div>
+
+
+        <div class="kpi red">
+            <div class="kpi-label">
+                > 4 horas
+            </div>
+
+            <div
+                id="kpi4h"
+                class="kpi-value">
+                0
+            </div>
+
+            <div class="kpi-sub">
+                Casos críticos
+            </div>
+        </div>
+
+
+        <div class="kpi purple">
+            <div class="kpi-label">
+                Promedio
+            </div>
+
+            <div
+                id="kpiAverage"
+                class="kpi-value">
+                0 h
+            </div>
+
+            <div class="kpi-sub">
+                Antigüedad promedio
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="chart-grid">
+
+        <div class="chart-card">
+
+            <h3>
+                Productividad por día
+            </h3>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="dailyChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-card">
+
+            <h3>
+                Productividad por mes
+            </h3>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="monthlyChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-card">
+
+            <h3>
+                Productividad por año
+            </h3>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="yearlyChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-card">
+
+            <h3>
+                Casos por agente
+            </h3>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="agentChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-card full">
+
+            <h3>
+                Distribución de antigüedad
+            </h3>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="agingChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DAILY
+===================================================== -->
+
+<section
+    id="daily"
+    class="tab">
+
+    <h2 class="section-title">
+        Productividad diaria
+    </h2>
+
+    <div class="chart-card">
+
+        <div class="chart-container">
+
+            <canvas
+                id="dailyDetailedChart">
+            </canvas>
+
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Registros
+                    </th>
+
+                    <th>
+                        Casos
+                    </th>
+
+                    <th>
+                        Agentes
+                    </th>
+
+                    <th>
+                        Repeticiones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="dailyTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MONTHLY
+===================================================== -->
+
+<section
+    id="monthly"
+    class="tab">
+
+    <h2 class="section-title">
+        Productividad mensual
+    </h2>
+
+    <div class="chart-card">
+
+        <div class="chart-container">
+
+            <canvas
+                id="monthlyDetailedChart">
+            </canvas>
+
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Mes
+                    </th>
+
+                    <th>
+                        Registros
+                    </th>
+
+                    <th>
+                        Casos
+                    </th>
+
+                    <th>
+                        Agentes
+                    </th>
+
+                    <th>
+                        Repeticiones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="monthlyTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     YEARLY
+===================================================== -->
+
+<section
+    id="yearly"
+    class="tab">
+
+    <h2 class="section-title">
+        Productividad anual
+    </h2>
+
+    <div class="chart-card">
+
+        <div class="chart-container">
+
+            <canvas
+                id="yearlyDetailedChart">
+            </canvas>
+
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Año
+                    </th>
+
+                    <th>
+                        Registros
+                    </th>
+
+                    <th>
+                        Casos
+                    </th>
+
+                    <th>
+                        Agentes
+                    </th>
+
+                    <th>
+                        Repeticiones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="yearlyTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     INCONGRUENCIAS
+===================================================== -->
+
+<section
+    id="inconsistencies"
+    class="tab">
+
+    <h2 class="section-title">
+        ⚠️ Incongruencias
+    </h2>
+
+    <p class="note">
+
+        Identifica cuando el mismo agente aparece
+        registrando el mismo caso más de una vez.
+
+    </p>
+
+
+    <div class="kpi-grid">
+
+        <div class="kpi red">
+
+            <div class="kpi-label">
+                Casos repetidos
+            </div>
+
+            <div
+                id="incCases"
+                class="kpi-value">
+                0
+            </div>
+
+        </div>
+
+
+        <div class="kpi yellow">
+
+            <div class="kpi-label">
+                Registros involucrados
+            </div>
+
+            <div
+                id="incRecords"
+                class="kpi-value">
+                0
+            </div>
+
+        </div>
+
+
+        <div class="kpi purple">
+
+            <div class="kpi-label">
+                Agentes involucrados
+            </div>
+
+            <div
+                id="incAgents"
+                class="kpi-value">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+    <br>
+
+
+    <div class="filters">
 
         <input
-            type="file"
-            id="fileInput"
-            accept=".xlsx,.xls,.csv"
-        >
+            id="incSearch"
+            placeholder="Buscar caso o agente...">
 
-        <div id="status" class="status"></div>
-    </section>
+        <select
+            id="incAgentFilter">
 
-    <div class="tabs">
+            <option value="">
+                Todos los agentes
+            </option>
 
-        <button class="tab-button active" data-tab="dashboard">
-            📊 Dashboard gerencial
-        </button>
+        </select>
 
-        <button class="tab-button" data-tab="daily">
-            📅 Productividad diaria
-        </button>
+        <select
+            id="incMinRepeat">
 
-        <button class="tab-button" data-tab="monthly">
-            🗓️ Productividad mensual
-        </button>
+            <option value="2">
+                2 o más registros
+            </option>
 
-        <button class="tab-button" data-tab="yearly">
-            📆 Productividad anual
-        </button>
+            <option value="3">
+                3 o más registros
+            </option>
 
-        <button class="tab-button" data-tab="inconsistencies">
-            ⚠️ Incongruencias
-        </button>
+            <option value="4">
+                4 o más registros
+            </option>
 
-        <button class="tab-button" data-tab="detail">
-            📋 Detalle de actividades
+        </select>
+
+        <button
+            class="action"
+            id="clearIncFilters">
+
+            Limpiar
+
         </button>
 
     </div>
 
-    <!-- DASHBOARD -->
 
-    <section id="dashboard" class="tab active">
+    <div class="table-wrapper">
 
-        <h2 class="section-title">Resumen gerencial</h2>
+        <table>
 
-        <div class="kpi-grid">
+            <thead>
 
-            <div class="kpi">
-                <div class="label">Registros</div>
-                <div class="value" id="kpiRecords">0</div>
-                <div class="sub">Filas procesadas</div>
+                <tr>
+
+                    <th>
+                        Caso
+                    </th>
+
+                    <th>
+                        Agente
+                    </th>
+
+                    <th>
+                        Veces
+                    </th>
+
+                    <th>
+                        Primera fecha
+                    </th>
+
+                    <th>
+                        Última fecha
+                    </th>
+
+                    <th>
+                        Cambios
+                    </th>
+
+                    <th>
+                        Detalle
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="incTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DETALLE DE ACTIVIDADES
+===================================================== -->
+
+<section
+    id="detail"
+    class="tab">
+
+    <h2 class="section-title">
+        📋 Detalle de actividades
+    </h2>
+
+    <div class="filters">
+
+        <input
+            id="searchInput"
+            placeholder="Buscar caso, agente, gestión, tema...">
+
+        <select
+            id="agentFilter">
+
+            <option value="">
+                Todos los agentes
+            </option>
+
+        </select>
+
+        <select
+            id="managementFilter">
+
+            <option value="">
+                Todas las gestiones
+            </option>
+
+        </select>
+
+        <select
+            id="statusFilter">
+
+            <option value="">
+                Todos los estados
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Caso
+                    </th>
+
+                    <th>
+                        Tipo
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Hora
+                    </th>
+
+                    <th>
+                        Fecha/hora registro
+                    </th>
+
+                    <th>
+                        Agente
+                    </th>
+
+                    <th>
+                        Modificado por
+                    </th>
+
+                    <th>
+                        Gestión
+                    </th>
+
+                    <th>
+                        Repetición
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="detailTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DETALLE OPERATIVO
+===================================================== -->
+
+<section
+    id="operational"
+    class="tab">
+
+    <h2 class="section-title">
+        🔎 Detalle operativo
+    </h2>
+
+    <p class="note">
+
+        Esta sección utiliza los campos operativos disponibles
+        en el reporte: propietario, modificador, valores anterior/nuevo,
+        antigüedad, Subject Summary y Subjects.
+
+    </p>
+
+
+    <div class="kpi-grid">
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Tiempo mínimo
             </div>
 
-            <div class="kpi">
-                <div class="label">Casos únicos</div>
-                <div class="value" id="kpiCases">0</div>
-                <div class="sub">Casos diferentes</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Agentes</div>
-                <div class="value" id="kpiAgents">0</div>
-                <div class="sub">Agentes con actividad</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Repeticiones</div>
-                <div class="value" id="kpiRepeated">0</div>
-                <div class="sub">Registros de casos repetidos</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Casos repetidos</div>
-                <div class="value" id="kpiRepeatedCases">0</div>
-                <div class="sub">Agente + caso</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Productividad promedio</div>
-                <div class="value" id="kpiAverage">0</div>
-                <div class="sub">Casos por agente/día</div>
-            </div>
-
-        </div>
-
-        <div class="chart-grid">
-
-            <div class="chart-card">
-                <h3>Productividad por día</h3>
-                <div class="chart-container">
-                    <canvas id="dailyChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h3>Productividad por mes</h3>
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h3>Productividad por año</h3>
-                <div class="chart-container">
-                    <canvas id="yearlyChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h3>Registros por agente</h3>
-                <div class="chart-container">
-                    <canvas id="agentChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card full">
-                <h3>Distribución de estados</h3>
-                <div class="chart-container">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- DAILY -->
-
-    <section id="daily" class="tab">
-
-        <h2 class="section-title">Productividad diaria</h2>
-
-        <p class="summary-note">
-            Productividad calculada a partir de casos únicos registrados por día.
-        </p>
-
-        <div class="chart-card">
-            <div class="chart-container">
-                <canvas id="dailyDetailedChart"></canvas>
-            </div>
-        </div>
-
-        <br>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Registros</th>
-                        <th>Casos únicos</th>
-                        <th>Agentes</th>
-                        <th>Repeticiones</th>
-                    </tr>
-                </thead>
-                <tbody id="dailyTable"></tbody>
-            </table>
-        </div>
-
-    </section>
-
-    <!-- MONTHLY -->
-
-    <section id="monthly" class="tab">
-
-        <h2 class="section-title">Productividad mensual</h2>
-
-        <p class="summary-note">
-            Consolidado mensual de la operación.
-        </p>
-
-        <div class="chart-card">
-            <div class="chart-container">
-                <canvas id="monthlyDetailedChart"></canvas>
-            </div>
-        </div>
-
-        <br>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Mes</th>
-                        <th>Registros</th>
-                        <th>Casos únicos</th>
-                        <th>Agentes</th>
-                        <th>Repeticiones</th>
-                    </tr>
-                </thead>
-                <tbody id="monthlyTable"></tbody>
-            </table>
-        </div>
-
-    </section>
-
-    <!-- YEARLY -->
-
-    <section id="yearly" class="tab">
-
-        <h2 class="section-title">Productividad anual</h2>
-
-        <p class="summary-note">
-            Consolidado anual de la operación.
-        </p>
-
-        <div class="chart-card">
-            <div class="chart-container">
-                <canvas id="yearlyDetailedChart"></canvas>
-            </div>
-        </div>
-
-        <br>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Año</th>
-                        <th>Registros</th>
-                        <th>Casos únicos</th>
-                        <th>Agentes</th>
-                        <th>Repeticiones</th>
-                    </tr>
-                </thead>
-                <tbody id="yearlyTable"></tbody>
-            </table>
-        </div>
-
-    </section>
-
-    <!-- INCONSISTENCIES -->
-
-    <section id="inconsistencies" class="tab">
-
-        <h2 class="section-title">⚠️ Incongruencias de registro</h2>
-
-        <p class="summary-note">
-            Se considera una repetición cuando el mismo agente registra el mismo
-            caso más de una vez en la base.
-        </p>
-
-        <div class="kpi-grid">
-
-            <div class="kpi">
-                <div class="label">Casos repetidos</div>
-                <div class="value" id="incCases">0</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Registros involucrados</div>
-                <div class="value" id="incRecords">0</div>
-            </div>
-
-            <div class="kpi">
-                <div class="label">Agentes involucrados</div>
-                <div class="value" id="incAgents">0</div>
+            <div
+                id="opMin"
+                class="kpi-value">
+                0 h
             </div>
 
         </div>
 
-        <br>
 
-        <div class="filters">
+        <div class="kpi yellow">
 
-            <input
-                type="text"
-                id="incSearch"
-                placeholder="Buscar caso o agente..."
-            >
+            <div class="kpi-label">
+                Tiempo máximo
+            </div>
 
-            <select id="incAgentFilter">
-                <option value="">Todos los agentes</option>
-            </select>
-
-            <select id="incMinRepeat">
-                <option value="2">2 o más registros</option>
-                <option value="3">3 o más registros</option>
-                <option value="4">4 o más registros</option>
-                <option value="5">5 o más registros</option>
-            </select>
-
-            <button class="action" id="clearIncFilters">
-                Limpiar filtros
-            </button>
+            <div
+                id="opMax"
+                class="kpi-value">
+                0 h
+            </div>
 
         </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Caso</th>
-                        <th>Agente</th>
-                        <th>Veces registrado</th>
-                        <th>Primera fecha/hora</th>
-                        <th>Última fecha/hora</th>
-                        <th>Gestiones / cambios</th>
-                        <th>Detalle</th>
-                    </tr>
-                </thead>
-                <tbody id="incTable"></tbody>
-            </table>
-        </div>
 
-    </section>
+        <div class="kpi purple">
 
-    <!-- DETAIL -->
+            <div class="kpi-label">
+                Tiempo promedio
+            </div>
 
-    <section id="detail" class="tab">
-
-        <h2 class="section-title">📋 Detalle de actividades</h2>
-
-        <div class="filters">
-
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Buscar caso, agente, correo, gestión, estado o tipo de caso..."
-            >
-
-            <select id="agentFilter">
-                <option value="">Todos los agentes</option>
-            </select>
-
-            <select id="managementFilter">
-                <option value="">Todos los tipos de gestión</option>
-            </select>
-
-            <select id="statusFilter">
-                <option value="">Todos los estados</option>
-            </select>
+            <div
+                id="opAvg"
+                class="kpi-value">
+                0 h
+            </div>
 
         </div>
 
-        <div class="table-wrapper">
 
-            <table>
+        <div class="kpi red">
 
-                <thead>
-                    <tr>
-                        <th>Caso</th>
-                        <th>Tipo de caso</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>Fecha/hora registro</th>
-                        <th>Agente</th>
-                        <th>Gestión</th>
-                        <th>Repetición</th>
-                    </tr>
-                </thead>
+            <div class="kpi-label">
+                Casos > 4 horas
+            </div>
 
-                <tbody id="detailTable"></tbody>
-
-            </table>
+            <div
+                id="op4h"
+                class="kpi-value">
+                0
+            </div>
 
         </div>
 
-    </section>
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Temas identificados
+            </div>
+
+            <div
+                id="opTopics"
+                class="kpi-value">
+                0
+            </div>
+
+        </div>
+
+
+        <div class="kpi green">
+
+            <div class="kpi-label">
+                Modificadores
+            </div>
+
+            <div
+                id="opModifiers"
+                class="kpi-value">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="operational-grid">
+
+
+        <!-- AGENTES -->
+
+        <div class="operational-card">
+
+            <h3>
+                👤 Detalle por agente
+            </h3>
+
+            <div
+                id="agentOperational">
+            </div>
+
+        </div>
+
+
+        <!-- TEMAS -->
+
+        <div class="operational-card">
+
+            <h3>
+                🏷️ Temas / Subject Summary
+            </h3>
+
+            <div
+                id="topicOperational"
+                class="topic-list">
+            </div>
+
+        </div>
+
+
+        <!-- SUBJECTS -->
+
+        <div class="operational-card">
+
+            <h3>
+                🔖 Subjects
+            </h3>
+
+            <div
+                id="subjectOperational"
+                class="topic-list">
+            </div>
+
+        </div>
+
+
+        <!-- MODIFICADORES -->
+
+        <div class="operational-card">
+
+            <h3>
+                🛠️ Usuarios que modifican
+            </h3>
+
+            <div
+                id="modifierOperational"
+                class="topic-list">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <h2 class="sub-title">
+        ⏱️ Antigüedad operativa por caso
+    </h2>
+
+
+    <div class="filters">
+
+        <input
+            id="operationalSearch"
+            placeholder="Buscar caso, agente, tema o modificador...">
+
+        <select
+            id="operationalAgentFilter">
+
+            <option value="">
+                Todos los agentes
+            </option>
+
+        </select>
+
+        <select
+            id="operationalAgeFilter">
+
+            <option value="">
+                Todos los tiempos
+            </option>
+
+            <option value="0">
+                Menos de 1 hora
+            </option>
+
+            <option value="1">
+                1 a 4 horas
+            </option>
+
+            <option value="4">
+                Más de 4 horas
+            </option>
+
+        </select>
+
+        <button
+            class="action"
+            id="clearOperationalFilters">
+
+            Limpiar
+
+        </button>
+
+    </div>
+
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Caso
+                    </th>
+
+                    <th>
+                        Agente actual
+                    </th>
+
+                    <th>
+                        Modificado por
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Hora
+                    </th>
+
+                    <th>
+                        Tiempo transcurrido
+                    </th>
+
+                    <th>
+                        Estado operativo
+                    </th>
+
+                    <th>
+                        Valor anterior
+                    </th>
+
+                    <th>
+                        Valor nuevo
+                    </th>
+
+                    <th>
+                        Días desde apertura
+                    </th>
+
+                    <th>
+                        Subject Summary
+                    </th>
+
+                    <th>
+                        Subjects
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody
+                id="operationalTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 </main>
 
+
 <script>
 
-"use strict";
-
 /* ============================================================
-   VARIABLES GLOBALES
+   ESTADO GLOBAL
 ============================================================ */
 
 let rawRows = [];
-let processedRows = [];
+
+let operationalRows = [];
+
+let latestByCase = [];
+
 let charts = {};
-
-const columnAliases = {
-
-    caseNumber: [
-        "numerodecaso",
-        "numero de caso",
-        "número de caso",
-        "caso",
-        "case",
-        "caseid",
-        "idcaso"
-    ],
-
-    type: [
-        "tipodecaso",
-        "tipo de caso",
-        "tipo",
-        "tipocaso"
-    ],
-
-    status: [
-        "estado",
-        "status",
-        "estatus"
-    ],
-
-    date: [
-        "fecha",
-        "date",
-        "fecharegistro"
-    ],
-
-    time: [
-        "hora",
-        "time"
-    ],
-
-    dateTime: [
-        "fechahoraregistro",
-        "fecha hora registro",
-        "fecha/hora registro",
-        "fecha hora",
-        "fechahora",
-        "datetime",
-        "timestamp"
-    ],
-
-    agent: [
-        "agente",
-        "agent",
-        "nombre agente",
-        "nombre del agente",
-        "usuario",
-        "owner",
-        "propietario"
-    ],
-
-    management: [
-        "gestion",
-        "gestión",
-        "tipo de gestion",
-        "tipo de gestión",
-        "actividad",
-        "accion",
-        "acción",
-        "modificacion",
-        "modificación"
-    ],
-
-    email: [
-        "correo",
-        "email",
-        "correo electronico",
-        "correo electrónico"
-    ]
-
-};
 
 
 /* ============================================================
    NORMALIZACIÓN
 ============================================================ */
 
-function normalizeText(value) {
+function norm(value) {
 
-    if (value === null || value === undefined) {
-        return "";
-    }
-
-    return String(value)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, " ");
-
-}
-
-
-function normalizeHeader(value) {
-
-    return normalizeText(value)
-        .replace(/[\/_-]/g, " ")
-        .replace(/\s+/g, "");
+    return String(
+        value === null ||
+        value === undefined
+            ? ""
+            : value
+    )
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 }
 
 
-function findColumn(headers, aliases) {
+function escapeHtml(value) {
 
-    const normalizedHeaders = headers.map(h => ({
-        original: h,
-        normalized: normalizeHeader(h)
-    }));
+    return String(
+        value === null ||
+        value === undefined
+            ? ""
+            : value
+    )
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-    for (const alias of aliases) {
-
-        const normalizedAlias = normalizeHeader(alias);
-
-        const exact = normalizedHeaders.find(
-            h => h.normalized === normalizedAlias
-        );
-
-        if (exact) {
-            return exact.original;
-        }
-    }
-
-    for (const alias of aliases) {
-
-        const normalizedAlias = normalizeHeader(alias);
-
-        const partial = normalizedHeaders.find(
-            h =>
-                h.normalized.includes(normalizedAlias) ||
-                normalizedAlias.includes(h.normalized)
-        );
-
-        if (partial) {
-            return partial.original;
-        }
-    }
-
-    return null;
 }
 
 
 /* ============================================================
    FECHAS
-============================================================ */
+   IMPORTANTE:
+   EL REPORTE VIENE EN HORA COT.
+   ============================================================ */
 
-function excelSerialToDate(serial) {
 
-    if (typeof serial !== "number" || !isFinite(serial)) {
-        return null;
-    }
+/*
+ * Creamos un Date artificial basado en UTC,
+ * pero utilizando los números de la hora COT.
+ *
+ * Esto evita que el navegador cambie:
+ *
+ * 24/09/2026 07:34
+ *
+ * por otra fecha debido a la zona horaria.
+ */
 
-    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+function cotDate(
+    year,
+    month,
+    day,
+    hour = 0,
+    minute = 0,
+    second = 0
+) {
 
     return new Date(
-        excelEpoch.getTime() + serial * 86400000
+        Date.UTC(
+            year,
+            month - 1,
+            day,
+            hour,
+            minute,
+            second
+        )
     );
+
 }
 
 
-function parseDateValue(value) {
+/*
+ * Convierte una fecha Excel serial.
+ */
 
-    if (value === null || value === undefined || value === "") {
+function parseExcelSerial(value) {
+
+    if (
+        typeof value !== "number" ||
+        !isFinite(value)
+    ) {
         return null;
     }
+
+    const parsed =
+        XLSX.SSF.parse_date_code(value);
+
+    if (!parsed) {
+        return null;
+    }
+
+    return cotDate(
+        parsed.y,
+        parsed.m,
+        parsed.d,
+        parsed.H || 0,
+        parsed.M || 0,
+        parsed.S || 0
+    );
+
+}
+
+
+/*
+ * Convierte específicamente:
+ *
+ * 24/09/2026 07:34 AM
+ *
+ * También acepta:
+ *
+ * 24/09/2026 19:34
+ * 24/09/26 07:34 PM
+ */
+
+function parseFechaCOT(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return null;
+    }
+
+
+    /*
+     * Excel serial.
+     */
+
+    if (typeof value === "number") {
+
+        return parseExcelSerial(value);
+
+    }
+
+
+    /*
+     * Date entregado por alguna versión
+     * de SheetJS.
+     */
 
     if (value instanceof Date) {
 
-        return isNaN(value.getTime())
-            ? null
-            : new Date(value.getTime());
-
-    }
-
-    if (typeof value === "number") {
-
-        return excelSerialToDate(value);
-
-    }
-
-    const text = String(value).trim();
-
-    if (!text) {
-        return null;
-    }
-
-    /* Excel serial escrito como texto */
-
-    if (/^\d+(\.\d+)?$/.test(text)) {
-
-        const numeric = Number(text);
-
-        if (numeric > 1 && numeric < 100000) {
-            return excelSerialToDate(numeric);
+        if (isNaN(value.getTime())) {
+            return null;
         }
+
+        return cotDate(
+            value.getFullYear(),
+            value.getMonth() + 1,
+            value.getDate(),
+            value.getHours(),
+            value.getMinutes(),
+            value.getSeconds()
+        );
+
     }
 
-    /* dd/mm/yyyy hh:mm:ss */
 
-    let match = text.match(
-        /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
-    );
+    const text =
+        String(value).trim();
+
+
+    /*
+     * DD/MM/YYYY HH:MM AM/PM
+     */
+
+    let match =
+        text.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)$/i
+        );
+
 
     if (match) {
 
-        let day = Number(match[1]);
-        let month = Number(match[2]) - 1;
-        let year = Number(match[3]);
+        let day =
+            Number(match[1]);
 
-        if (year < 100) {
-            year += 2000;
+        let month =
+            Number(match[2]);
+
+        let year =
+            Number(match[3]);
+
+        let hour =
+            Number(match[4]);
+
+        let minute =
+            Number(match[5]);
+
+        let second =
+            Number(match[6] || 0);
+
+        const ampm =
+            match[7].toUpperCase();
+
+
+        if (
+            ampm === "PM" &&
+            hour !== 12
+        ) {
+            hour += 12;
         }
 
-        return new Date(
+        if (
+            ampm === "AM" &&
+            hour === 12
+        ) {
+            hour = 0;
+        }
+
+
+        return cotDate(
             year,
             month,
             day,
-            Number(match[4] || 0),
-            Number(match[5] || 0),
-            Number(match[6] || 0)
-        );
-    }
-
-    /* yyyy-mm-dd */
-
-    const parsed = new Date(text);
-
-    if (!isNaN(parsed.getTime())) {
-        return parsed;
-    }
-
-    return null;
-}
-
-
-function parseTimeValue(value) {
-
-    if (value === null || value === undefined || value === "") {
-        return null;
-    }
-
-    if (typeof value === "number") {
-
-        const totalSeconds = Math.round(
-            (value % 1) * 86400
+            hour,
+            minute,
+            second
         );
 
-        return totalSeconds;
     }
 
-    const text = String(value).trim();
 
-    /* Decimal Excel */
+    /*
+     * DD/MM/YYYY HH:MM
+     */
 
-    if (/^\d+(\.\d+)?$/.test(text)) {
+    match =
+        text.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+        );
 
-        const number = Number(text);
-
-        if (number >= 0 && number < 1) {
-
-            return Math.round(
-                number * 86400
-            );
-
-        }
-    }
-
-    const match = text.match(
-        /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/
-    );
 
     if (match) {
 
-        return (
-            Number(match[1]) * 3600 +
-            Number(match[2]) * 60 +
-            Number(match[3] || 0)
+        return cotDate(
+            Number(match[3]),
+            Number(match[2]),
+            Number(match[1]),
+            Number(match[4]),
+            Number(match[5]),
+            Number(match[6] || 0)
         );
+
     }
+
+
+    /*
+     * DD/MM/YY
+     */
+
+    match =
+        text.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/
+        );
+
+
+    if (match) {
+
+        return cotDate(
+            2000 + Number(match[3]),
+            Number(match[2]),
+            Number(match[1])
+        );
+
+    }
+
+
+    /*
+     * NUNCA usamos:
+     *
+     * new Date("24/09/2026...")
+     *
+     * porque el navegador puede interpretarlo
+     * de manera diferente.
+     */
 
     return null;
-}
 
-
-function combineDateAndTime(dateValue, timeValue) {
-
-    const date = parseDateValue(dateValue);
-
-    if (!date) {
-        return null;
-    }
-
-    const seconds = parseTimeValue(timeValue);
-
-    if (seconds === null) {
-        return date;
-    }
-
-    const result = new Date(date.getTime());
-
-    result.setHours(
-        Math.floor(seconds / 3600),
-        Math.floor((seconds % 3600) / 60),
-        seconds % 60,
-        0
-    );
-
-    return result;
 }
 
 
 /* ============================================================
-   FORMATO
+   FORMATO FECHA
 ============================================================ */
 
-function pad(number) {
+function pad(n) {
 
-    return String(number).padStart(2, "0");
+    return String(n).padStart(2, "0");
 
 }
 
 
 function formatDate(date) {
 
-    if (!date || isNaN(date.getTime())) {
+    if (
+        !date ||
+        isNaN(date.getTime())
+    ) {
         return "";
     }
 
     return (
-        pad(date.getDate()) +
+        pad(date.getUTCDate()) +
         "/" +
-        pad(date.getMonth() + 1) +
+        pad(date.getUTCMonth() + 1) +
         "/" +
-        String(date.getFullYear()).slice(-2)
+        String(
+            date.getUTCFullYear()
+        ).slice(-2)
     );
 
 }
@@ -1159,16 +1964,19 @@ function formatDate(date) {
 
 function formatTime(date) {
 
-    if (!date || isNaN(date.getTime())) {
+    if (
+        !date ||
+        isNaN(date.getTime())
+    ) {
         return "";
     }
 
     return (
-        pad(date.getHours()) +
+        pad(date.getUTCHours()) +
         ":" +
-        pad(date.getMinutes()) +
+        pad(date.getUTCMinutes()) +
         ":" +
-        pad(date.getSeconds())
+        pad(date.getUTCSeconds())
     );
 
 }
@@ -1176,374 +1984,722 @@ function formatTime(date) {
 
 function formatDateTime(date) {
 
-    if (!date || isNaN(date.getTime())) {
-        return "";
-    }
-
-    return formatDate(date) + " " + formatTime(date);
-
-}
-
-
-function dateKey(date) {
-
-    if (!date || isNaN(date.getTime())) {
+    if (
+        !date ||
+        isNaN(date.getTime())
+    ) {
         return "";
     }
 
     return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate())
+        formatDate(date) +
+        " " +
+        formatTime(date)
     );
 
 }
 
 
-function monthKey(date) {
-
-    if (!date || isNaN(date.getTime())) {
-        return "";
-    }
-
-    return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1)
-    );
-
-}
-
-
-function yearKey(date) {
-
-    if (!date || isNaN(date.getTime())) {
-        return "";
-    }
-
-    return String(date.getFullYear());
-
-}
-
-
 /* ============================================================
-   ESCAPE HTML
+   FECHA ACTUAL EN COT
 ============================================================ */
 
-function escapeHtml(value) {
+function nowCOT() {
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-}
-
-
-/* ============================================================
-   STATUS
-============================================================ */
-
-function showStatus(message, type = "info") {
-
-    const element = document.getElementById("status");
-
-    element.textContent = message;
-    element.className = "status show " + type;
-
-}
-
-
-/* ============================================================
-   CARGA DEL EXCEL
-============================================================ */
-
-document
-    .getElementById("fileInput")
-    .addEventListener("change", handleFile);
-
-
-async function handleFile(event) {
-
-    const file = event.target.files[0];
-
-    if (!file) {
-        return;
-    }
-
-    try {
-
-        showStatus(
-            "Procesando archivo: " + file.name + "...",
-            "info"
-        );
-
-        const buffer = await file.arrayBuffer();
-
-        const workbook = XLSX.read(buffer, {
-            type: "array",
-            cellDates: true,
-            raw: true
-        });
-
-        const firstSheetName =
-            workbook.SheetNames[0];
-
-        const sheet =
-            workbook.Sheets[firstSheetName];
-
-        rawRows = XLSX.utils.sheet_to_json(
-            sheet,
+    const parts =
+        new Intl.DateTimeFormat(
+            "en-US",
             {
-                defval: "",
-                raw: true
+                timeZone: "America/Bogota",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hourCycle: "h23"
             }
-        );
+        )
+        .formatToParts(new Date());
 
-        if (!rawRows.length) {
-            throw new Error(
-                "El archivo no contiene registros."
-            );
+
+    const data = {};
+
+    parts.forEach(p => {
+
+        if (p.type !== "literal") {
+            data[p.type] =
+                Number(p.value);
         }
 
-        processRows();
+    });
 
-        populateFilters();
 
-        updateDashboard();
+    return cotDate(
+        data.year,
+        data.month,
+        data.day,
+        data.hour,
+        data.minute,
+        data.second
+    );
 
-        renderAllTables();
+}
+
+
+/* ============================================================
+   DIFERENCIA HORAS
+============================================================ */
+
+function elapsedHours(date) {
+
+    if (!date) {
+        return 0;
+    }
+
+    const now =
+        nowCOT();
+
+    return Math.max(
+        0,
+        (
+            now.getTime() -
+            date.getTime()
+        ) / 3600000
+    );
+
+}
+
+
+/* ============================================================
+   CLASIFICACIÓN OPERATIVA
+============================================================ */
+
+function agingClass(hours) {
+
+    if (hours > 4) {
+        return "red";
+    }
+
+    if (hours > 1) {
+        return "yellow";
+    }
+
+    return "green";
+
+}
+
+
+function agingLabel(hours) {
+
+    if (hours > 4) {
+        return "🔴 Más de 4 horas";
+    }
+
+    if (hours > 1) {
+        return "🟡 Entre 1 y 4 horas";
+    }
+
+    return "🟢 Menos de 1 hora";
+
+}
+
+
+/* ============================================================
+   DETECTAR ENCABEZADOS
+============================================================ */
+
+function detectarEncabezados(matrix) {
+
+    let headerRowIdx = -1;
+
+    let cols = {};
+
+
+    for (
+        let i = 0;
+        i < Math.min(matrix.length, 60);
+        i++
+    ) {
+
+        const row =
+            matrix[i] || [];
+
+
+        const texto =
+            row
+                .map(norm)
+                .join(" | ");
+
+
+        if (
+            texto.includes(
+                "numero del caso"
+            )
+        ) {
+
+            headerRowIdx = i;
+
+            break;
+
+        }
+
+    }
+
+
+    if (headerRowIdx === -1) {
+        return null;
+    }
+
+
+    const header =
+        matrix[headerRowIdx];
+
+
+    header.forEach(
+        (cell, index) => {
+
+            const c =
+                norm(cell);
+
+
+            if (
+                c.includes(
+                    "numero del caso"
+                )
+            ) {
+
+                cols.caseNumber =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "propietario del caso"
+                )
+            ) {
+
+                cols.owner =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "modificado por"
+                )
+            ) {
+
+                cols.modifiedBy =
+                    index;
+
+            }
+
+            else if (
+                c.includes("campo") &&
+                c.includes("evento")
+            ) {
+
+                cols.event =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "valor anterior"
+                )
+            ) {
+
+                cols.oldValue =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "valor nuevo"
+                )
+            ) {
+
+                cols.newValue =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "fecha de modificacion"
+                )
+            ) {
+
+                cols.modifiedDate =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "days from date/time opened"
+                ) ||
+                c.includes(
+                    "days from"
+                )
+            ) {
+
+                cols.daysOpened =
+                    index;
+
+            }
+
+            else if (
+                c.includes(
+                    "subject summary"
+                )
+            ) {
+
+                cols.subjectSummary =
+                    index;
+
+            }
+
+            else if (
+                c === "subjects" ||
+                c.includes("subjects")
+            ) {
+
+                cols.subjects =
+                    index;
+
+            }
+
+        }
+    );
+
+
+    return {
+        headerRowIdx,
+        cols
+    };
+
+}
+
+
+/* ============================================================
+   PROCESAR EXCEL
+============================================================ */
+
+function processFile() {
+
+    const file =
+        document.getElementById(
+            "fileInput"
+        ).files[0];
+
+
+    if (!file) {
 
         showStatus(
-            "Archivo cargado correctamente: " +
-            rawRows.length +
-            " registros procesados.",
-            "success"
-        );
-
-    } catch (error) {
-
-        console.error(error);
-
-        showStatus(
-            "No fue posible procesar el archivo: " +
-            error.message,
+            "Selecciona un archivo Excel.",
             "error"
         );
 
+        return;
+
     }
+
+
+    showStatus(
+        "Procesando archivo...",
+        "info"
+    );
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(event) {
+
+            try {
+
+                const data =
+                    new Uint8Array(
+                        event.target.result
+                    );
+
+
+                const workbook =
+                    XLSX.read(
+                        data,
+                        {
+                            type: "array",
+                            cellDates: false,
+                            raw: true
+                        }
+                    );
+
+
+                const sheet =
+                    workbook.Sheets[
+                        workbook.SheetNames[0]
+                    ];
+
+
+                const matrix =
+                    XLSX.utils.sheet_to_json(
+                        sheet,
+                        {
+                            header: 1,
+                            defval: "",
+                            raw: true
+                        }
+                    );
+
+
+                analizarReporte(
+                    matrix
+                );
+
+
+            }
+
+            catch(error) {
+
+                console.error(error);
+
+                showStatus(
+                    "Error leyendo el Excel: " +
+                    error.message,
+                    "error"
+                );
+
+            }
+
+        };
+
+
+    reader.readAsArrayBuffer(file);
 
 }
 
 
 /* ============================================================
-   PROCESAMIENTO PRINCIPAL
+   ANALIZAR REPORTE
 ============================================================ */
 
-function processRows() {
+function analizarReporte(matrix) {
 
-    const headers = Object.keys(rawRows[0]);
+    const detected =
+        detectarEncabezados(
+            matrix
+        );
 
-    const columns = {
 
-        caseNumber:
-            findColumn(
-                headers,
-                columnAliases.caseNumber
-            ),
+    if (!detected) {
 
-        type:
-            findColumn(
-                headers,
-                columnAliases.type
-            ),
+        showStatus(
+            "No se encontró la fila de encabezados del reporte.",
+            "error"
+        );
 
-        status:
-            findColumn(
-                headers,
-                columnAliases.status
-            ),
+        return;
 
-        date:
-            findColumn(
-                headers,
-                columnAliases.date
-            ),
+    }
 
-        time:
-            findColumn(
-                headers,
-                columnAliases.time
-            ),
 
-        dateTime:
-            findColumn(
-                headers,
-                columnAliases.dateTime
-            ),
+    const {
+        headerRowIdx,
+        cols
+    } = detected;
 
-        agent:
-            findColumn(
-                headers,
-                columnAliases.agent
-            ),
 
-        management:
-            findColumn(
-                headers,
-                columnAliases.management
-            ),
+    if (
+        cols.caseNumber === undefined ||
+        cols.modifiedDate === undefined
+    ) {
 
-        email:
-            findColumn(
-                headers,
-                columnAliases.email
-            )
+        showStatus(
+            "El Excel no contiene las columnas obligatorias Número del caso y Fecha de modificación.",
+            "error"
+        );
 
-    };
+        return;
 
-    console.log("Columnas detectadas:", columns);
+    }
 
-    processedRows = rawRows.map(
-        (row, index) => {
 
-            const caseNumber =
-                columns.caseNumber
-                    ? row[columns.caseNumber]
-                    : "";
+    operationalRows = [];
 
-            const type =
-                columns.type
-                    ? row[columns.type]
-                    : "";
 
-            const status =
-                columns.status
-                    ? row[columns.status]
-                    : "";
+    let currentCase = null;
 
-            const agent =
-                columns.agent
-                    ? row[columns.agent]
-                    : "";
 
-            const management =
-                columns.management
-                    ? row[columns.management]
-                    : "";
+    for (
+        let r = headerRowIdx + 1;
+        r < matrix.length;
+        r++
+    ) {
 
-            const email =
-                columns.email
-                    ? row[columns.email]
-                    : "";
+        const row =
+            matrix[r] || [];
 
-            const dateValue =
-                columns.date
-                    ? row[columns.date]
-                    : "";
 
-            const timeValue =
-                columns.time
-                    ? row[columns.time]
-                    : "";
+        let caseValue =
+            String(
+                row[cols.caseNumber] ??
+                ""
+            ).trim();
 
-            let registrationDate = null;
 
-            /*
-             * PRIORIDAD:
-             * 1. FechaHoraRegistro
-             * 2. Fecha + Hora
-             */
+        const caseNorm =
+            norm(caseValue);
 
-            if (columns.dateTime) {
 
-                registrationDate =
-                    parseDateValue(
-                        row[columns.dateTime]
-                    );
+        /*
+         * Fin del reporte.
+         */
 
-            }
-
-            if (!registrationDate) {
-
-                registrationDate =
-                    combineDateAndTime(
-                        dateValue,
-                        timeValue
-                    );
-
-            }
-
-            const baseDate =
-                parseDateValue(dateValue);
-
-            let activityDate =
-                baseDate || registrationDate;
-
-            return {
-
-                index,
-
-                caseNumber:
-                    String(caseNumber ?? "").trim(),
-
-                type:
-                    String(type ?? "").trim(),
-
-                status:
-                    String(status ?? "").trim(),
-
-                agent:
-                    String(agent ?? "").trim(),
-
-                management:
-                    String(management ?? "").trim(),
-
-                email:
-                    String(email ?? "").trim(),
-
-                date:
-                    activityDate,
-
-                time:
-                    registrationDate,
-
-                registrationDate,
-
-                raw: row
-
-            };
-
+        if (
+            caseNorm === "total"
+        ) {
+            break;
         }
-    );
+
+
+        if (
+            caseNorm === "subtotal"
+        ) {
+            continue;
+        }
+
+
+        /*
+         * Salesforce puede dejar el número
+         * del caso vacío en filas posteriores
+         * del mismo grupo.
+         */
+
+        if (caseValue) {
+            currentCase =
+                caseValue;
+        }
+
+
+        if (!currentCase) {
+            continue;
+        }
+
+
+        const event =
+            cols.event !== undefined
+                ? String(
+                    row[cols.event] ??
+                    ""
+                ).trim()
+                : "";
+
+
+        /*
+         * Solo analizamos eventos
+         * de propietario.
+         */
+
+        if (
+            event &&
+            !norm(event).includes(
+                "propietario"
+            ) &&
+            !norm(event).includes(
+                "owner"
+            )
+        ) {
+            continue;
+        }
+
+
+        const modifiedDate =
+            parseFechaCOT(
+                row[
+                    cols.modifiedDate
+                ]
+            );
+
+
+        if (!modifiedDate) {
+            continue;
+        }
+
+
+        operationalRows.push({
+
+            caseNumber:
+                currentCase,
+
+            owner:
+                cols.owner !== undefined
+                    ? String(
+                        row[cols.owner] ??
+                        ""
+                    ).trim()
+                    : "",
+
+            modifiedBy:
+                cols.modifiedBy !== undefined
+                    ? String(
+                        row[
+                            cols.modifiedBy
+                        ] ??
+                        ""
+                    ).trim()
+                    : "",
+
+            event,
+
+            oldValue:
+                cols.oldValue !== undefined
+                    ? String(
+                        row[
+                            cols.oldValue
+                        ] ??
+                        ""
+                    ).trim()
+                    : "",
+
+            newValue:
+                cols.newValue !== undefined
+                    ? String(
+                        row[
+                            cols.newValue
+                        ] ??
+                        ""
+                    ).trim()
+                    : "",
+
+            modifiedDate,
+
+            daysOpened:
+                cols.daysOpened !== undefined
+                    ? Number(
+                        row[
+                            cols.daysOpened
+                        ]
+                    ) || 0
+                    : 0,
+
+            subjectSummary:
+                cols.subjectSummary !== undefined
+                    ? String(
+                        row[
+                            cols.subjectSummary
+                        ] ??
+                        ""
+                    ).trim()
+                    : "",
+
+            subjects:
+                cols.subjects !== undefined
+                    ? String(
+                        row[
+                            cols.subjects
+                        ] ??
+                        ""
+                    ).trim()
+                    : ""
+
+        });
+
+    }
+
 
     /*
-     * Orden cronológico.
+     * Ordenar cronológicamente.
      */
 
-    processedRows.sort(
-        (a, b) => {
+    operationalRows.sort(
+        (a, b) =>
+            a.modifiedDate.getTime() -
+            b.modifiedDate.getTime()
+    );
 
-            const ta =
-                a.registrationDate
-                    ? a.registrationDate.getTime()
-                    : 0;
 
-            const tb =
-                b.registrationDate
-                    ? b.registrationDate.getTime()
-                    : 0;
+    /*
+     * Última modificación por caso.
+     */
 
-            return ta - tb;
+    const caseMap =
+        new Map();
+
+
+    operationalRows.forEach(
+        row => {
+
+            if (
+                !caseMap.has(
+                    row.caseNumber
+                )
+            ) {
+
+                caseMap.set(
+                    row.caseNumber,
+                    row
+                );
+
+            }
+
+            else {
+
+                const existing =
+                    caseMap.get(
+                        row.caseNumber
+                    );
+
+
+                if (
+                    row.modifiedDate >
+                    existing.modifiedDate
+                ) {
+
+                    caseMap.set(
+                        row.caseNumber,
+                        row
+                    );
+
+                }
+
+            }
 
         }
     );
 
+
+    latestByCase =
+        Array.from(
+            caseMap.values()
+        );
+
+
+    /*
+     * Repeticiones.
+     */
+
     calculateRepetitions();
+
+
+    populateFilters();
+
+    updateAll();
+
+    showStatus(
+        "Archivo procesado correctamente. " +
+        operationalRows.length +
+        " registros y " +
+        latestByCase.length +
+        " casos identificados.",
+        "success"
+    );
 
 }
 
@@ -1554,111 +2710,171 @@ function processRows() {
 
 function calculateRepetitions() {
 
-    const groups = new Map();
+    const groups =
+        new Map();
 
-    processedRows.forEach(row => {
 
-        const caseValue =
-            normalizeText(row.caseNumber);
+    operationalRows.forEach(
+        row => {
 
-        const agentValue =
-            normalizeText(row.agent);
+            const key =
+                norm(row.caseNumber) +
+                "||" +
+                norm(row.owner);
 
-        if (!caseValue || !agentValue) {
-            return;
+
+            if (!groups.has(key)) {
+
+                groups.set(
+                    key,
+                    []
+                );
+
+            }
+
+
+            groups
+                .get(key)
+                .push(row);
+
         }
+    );
 
-        const key =
-            caseValue + "||" + agentValue;
 
-        if (!groups.has(key)) {
-            groups.set(key, []);
+    operationalRows.forEach(
+        row => {
+
+            const key =
+                norm(row.caseNumber) +
+                "||" +
+                norm(row.owner);
+
+
+            const group =
+                groups.get(key) || [];
+
+
+            row.repeatCount =
+                group.length;
+
+            row.isRepeated =
+                group.length > 1;
+
+            row.repeatGroup =
+                group;
+
         }
-
-        groups.get(key).push(row);
-
-    });
-
-    processedRows.forEach(row => {
-
-        const key =
-            normalizeText(row.caseNumber) +
-            "||" +
-            normalizeText(row.agent);
-
-        const group =
-            groups.get(key) || [];
-
-        row.repeatCount = group.length;
-
-        row.isRepeated =
-            group.length > 1;
-
-        row.repeatGroup =
-            group;
-
-    });
+    );
 
 }
 
 
 /* ============================================================
-   MÉTRICAS
+   AGRUPACIONES DE FECHA
 ============================================================ */
 
-function getUniqueCases(rows) {
+function dateKey(date) {
 
-    return new Set(
-        rows
-            .map(r => normalizeText(r.caseNumber))
-            .filter(Boolean)
-    ).size;
-
-}
-
-
-function getUniqueAgents(rows) {
-
-    return new Set(
-        rows
-            .map(r => normalizeText(r.agent))
-            .filter(Boolean)
-    ).size;
+    return [
+        date.getUTCFullYear(),
+        pad(date.getUTCMonth() + 1),
+        pad(date.getUTCDate())
+    ].join("-");
 
 }
 
 
-function getRepeatedGroups(rows = processedRows) {
+function monthKey(date) {
 
-    const groups = new Map();
+    return [
+        date.getUTCFullYear(),
+        pad(date.getUTCMonth() + 1)
+    ].join("-");
 
-    rows.forEach(row => {
+}
 
-        if (!row.isRepeated) {
-            return;
+
+function yearKey(date) {
+
+    return String(
+        date.getUTCFullYear()
+    );
+
+}
+
+
+function groupDates(rows, mode) {
+
+    const map =
+        new Map();
+
+
+    rows.forEach(
+        row => {
+
+            const key =
+                mode === "day"
+                    ? dateKey(
+                        row.modifiedDate
+                    )
+                    : mode === "month"
+                        ? monthKey(
+                            row.modifiedDate
+                        )
+                        : yearKey(
+                            row.modifiedDate
+                        );
+
+
+            if (!map.has(key)) {
+
+                map.set(
+                    key,
+                    {
+                        records: 0,
+                        cases: new Set(),
+                        agents: new Set(),
+                        repeats: 0
+                    }
+                );
+
+            }
+
+
+            const item =
+                map.get(key);
+
+
+            item.records++;
+
+
+            item.cases.add(
+                row.caseNumber
+            );
+
+
+            if (row.owner) {
+
+                item.agents.add(
+                    row.owner
+                );
+
+            }
+
+
+            if (
+                row.isRepeated
+            ) {
+
+                item.repeats++;
+
+            }
+
         }
-
-        const key =
-            normalizeText(row.caseNumber) +
-            "||" +
-            normalizeText(row.agent);
-
-        if (!groups.has(key)) {
-            groups.set(key, row.repeatGroup);
-        }
-
-    });
-
-    return Array.from(groups.values());
-
-}
+    );
 
 
-function countRepeatedRecords(rows = processedRows) {
-
-    return rows.filter(
-        r => r.isRepeated
-    ).length;
+    return map;
 
 }
 
@@ -1667,224 +2883,160 @@ function countRepeatedRecords(rows = processedRows) {
    DASHBOARD
 ============================================================ */
 
+function updateAll() {
+
+    updateDashboard();
+
+    renderCharts();
+
+    renderDailyTable();
+
+    renderMonthlyTable();
+
+    renderYearlyTable();
+
+    renderDetailTable();
+
+    renderInconsistencies();
+
+    renderOperational();
+
+}
+
+
+/* ============================================================
+   DASHBOARD KPIs
+============================================================ */
+
 function updateDashboard() {
 
-    const totalRecords =
-        processedRows.length;
+    const cases =
+        latestByCase.length;
 
-    const uniqueCases =
-        getUniqueCases(processedRows);
+
+    const records =
+        operationalRows.length;
+
 
     const agents =
-        getUniqueAgents(processedRows);
+        new Set(
+            latestByCase
+                .map(r => r.owner)
+                .filter(Boolean)
+        ).size;
 
-    const repeatedGroups =
-        getRepeatedGroups();
 
-    const repeatedRecords =
-        countRepeatedRecords();
+    const aging =
+        latestByCase.map(
+            r =>
+                elapsedHours(
+                    r.modifiedDate
+                )
+        );
 
-    const productivity =
-        agents > 0
-            ? (uniqueCases / agents).toFixed(1)
-            : "0";
 
-    document.getElementById(
-        "kpiRecords"
-    ).textContent =
-        totalRecords.toLocaleString("es-ES");
+    const more1 =
+        aging.filter(
+            x => x > 1
+        ).length;
+
+
+    const more4 =
+        aging.filter(
+            x => x > 4
+        ).length;
+
+
+    const avg =
+        aging.length
+            ? aging.reduce(
+                (a, b) => a + b,
+                0
+            ) / aging.length
+            : 0;
+
 
     document.getElementById(
         "kpiCases"
     ).textContent =
-        uniqueCases.toLocaleString("es-ES");
+        cases.toLocaleString(
+            "es-ES"
+        );
+
+
+    document.getElementById(
+        "kpiRecords"
+    ).textContent =
+        records.toLocaleString(
+            "es-ES"
+        );
+
 
     document.getElementById(
         "kpiAgents"
     ).textContent =
-        agents.toLocaleString("es-ES");
+        agents.toLocaleString(
+            "es-ES"
+        );
+
 
     document.getElementById(
-        "kpiRepeated"
+        "kpi1h"
     ).textContent =
-        repeatedRecords.toLocaleString("es-ES");
+        more1;
+
 
     document.getElementById(
-        "kpiRepeatedCases"
+        "kpi4h"
     ).textContent =
-        repeatedGroups.length.toLocaleString("es-ES");
+        more4;
+
 
     document.getElementById(
         "kpiAverage"
     ).textContent =
-        productivity;
-
-    updateInconsistencyKPIs();
-
-    renderCharts();
-
-}
+        avg.toFixed(1) +
+        " h";
 
 
-/* ============================================================
-   AGRUPACIONES
-============================================================ */
+    /*
+     * Incongruencias.
+     */
 
-function groupByDay(rows) {
-
-    const map = new Map();
-
-    rows.forEach(row => {
-
-        if (!row.registrationDate) {
-            return;
-        }
-
-        const key =
-            dateKey(row.registrationDate);
-
-        if (!map.has(key)) {
-
-            map.set(key, {
-                records: 0,
-                cases: new Set(),
-                agents: new Set(),
-                repetitions: 0
-            });
-
-        }
-
-        const item = map.get(key);
-
-        item.records++;
-
-        if (row.caseNumber) {
-            item.cases.add(
-                normalizeText(row.caseNumber)
-            );
-        }
-
-        if (row.agent) {
-            item.agents.add(
-                normalizeText(row.agent)
-            );
-        }
-
-        if (row.isRepeated) {
-            item.repetitions++;
-        }
-
-    });
-
-    return map;
-
-}
+    const repeatedGroups =
+        getRepeatedGroups();
 
 
-function groupByMonth(rows) {
-
-    const map = new Map();
-
-    rows.forEach(row => {
-
-        if (!row.registrationDate) {
-            return;
-        }
-
-        const key =
-            monthKey(row.registrationDate);
-
-        if (!map.has(key)) {
-
-            map.set(key, {
-                records: 0,
-                cases: new Set(),
-                agents: new Set(),
-                repetitions: 0
-            });
-
-        }
-
-        const item = map.get(key);
-
-        item.records++;
-
-        if (row.caseNumber) {
-            item.cases.add(
-                normalizeText(row.caseNumber)
-            );
-        }
-
-        if (row.agent) {
-            item.agents.add(
-                normalizeText(row.agent)
-            );
-        }
-
-        if (row.isRepeated) {
-            item.repetitions++;
-        }
-
-    });
-
-    return map;
-
-}
+    document.getElementById(
+        "incCases"
+    ).textContent =
+        repeatedGroups.length;
 
 
-function groupByYear(rows) {
+    document.getElementById(
+        "incRecords"
+    ).textContent =
+        repeatedGroups.reduce(
+            (total, group) =>
+                total + group.length,
+            0
+        );
 
-    const map = new Map();
 
-    rows.forEach(row => {
-
-        if (!row.registrationDate) {
-            return;
-        }
-
-        const key =
-            yearKey(row.registrationDate);
-
-        if (!map.has(key)) {
-
-            map.set(key, {
-                records: 0,
-                cases: new Set(),
-                agents: new Set(),
-                repetitions: 0
-            });
-
-        }
-
-        const item = map.get(key);
-
-        item.records++;
-
-        if (row.caseNumber) {
-            item.cases.add(
-                normalizeText(row.caseNumber)
-            );
-        }
-
-        if (row.agent) {
-            item.agents.add(
-                normalizeText(row.agent)
-            );
-        }
-
-        if (row.isRepeated) {
-            item.repetitions++;
-        }
-
-    });
-
-    return map;
+    document.getElementById(
+        "incAgents"
+    ).textContent =
+        new Set(
+            repeatedGroups.map(
+                g => g[0]?.owner
+            )
+        ).size;
 
 }
 
 
 /* ============================================================
-   GRÁFICAS
+   CHARTS
 ============================================================ */
 
 function destroyChart(name) {
@@ -1903,10 +3055,14 @@ function destroyChart(name) {
 function renderCharts() {
 
     renderDailyChart();
+
     renderMonthlyChart();
+
     renderYearlyChart();
+
     renderAgentChart();
-    renderStatusChart();
+
+    renderAgingChart();
 
     renderDetailedCharts();
 
@@ -1915,19 +3071,32 @@ function renderCharts() {
 
 function renderDailyChart() {
 
-    destroyChart("daily");
+    destroyChart(
+        "daily"
+    );
+
 
     const groups =
-        groupByDay(processedRows);
+        groupDates(
+            operationalRows,
+            "day"
+        );
+
 
     const labels =
-        Array.from(groups.keys()).sort();
+        Array.from(
+            groups.keys()
+        ).sort();
+
 
     const values =
         labels.map(
             key =>
-                groups.get(key).cases.size
+                groups.get(
+                    key
+                ).cases.size
         );
+
 
     charts.daily =
         new Chart(
@@ -1936,23 +3105,35 @@ function renderDailyChart() {
             ),
             {
                 type: "line",
+
                 data: {
+
                     labels,
-                    datasets: [{
-                        label: "Casos únicos",
-                        data: values,
-                        tension: .25
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true
+
+                    datasets: [
+
+                        {
+                            label:
+                                "Casos",
+                            data:
+                                values,
+                            tension:
+                                .25
                         }
-                    }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
@@ -1961,19 +3142,32 @@ function renderDailyChart() {
 
 function renderMonthlyChart() {
 
-    destroyChart("monthly");
+    destroyChart(
+        "monthly"
+    );
+
 
     const groups =
-        groupByMonth(processedRows);
+        groupDates(
+            operationalRows,
+            "month"
+        );
+
 
     const labels =
-        Array.from(groups.keys()).sort();
+        Array.from(
+            groups.keys()
+        ).sort();
+
 
     const values =
         labels.map(
             key =>
-                groups.get(key).cases.size
+                groups.get(
+                    key
+                ).cases.size
         );
+
 
     charts.monthly =
         new Chart(
@@ -1982,17 +3176,33 @@ function renderMonthlyChart() {
             ),
             {
                 type: "bar",
+
                 data: {
+
                     labels,
-                    datasets: [{
-                        label: "Casos únicos",
-                        data: values
-                    }]
+
+                    datasets: [
+
+                        {
+                            label:
+                                "Casos",
+                            data:
+                                values
+                        }
+
+                    ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
@@ -2001,19 +3211,32 @@ function renderMonthlyChart() {
 
 function renderYearlyChart() {
 
-    destroyChart("yearly");
+    destroyChart(
+        "yearly"
+    );
+
 
     const groups =
-        groupByYear(processedRows);
+        groupDates(
+            operationalRows,
+            "year"
+        );
+
 
     const labels =
-        Array.from(groups.keys()).sort();
+        Array.from(
+            groups.keys()
+        ).sort();
+
 
     const values =
         labels.map(
             key =>
-                groups.get(key).cases.size
+                groups.get(
+                    key
+                ).cases.size
         );
+
 
     charts.yearly =
         new Chart(
@@ -2022,17 +3245,33 @@ function renderYearlyChart() {
             ),
             {
                 type: "bar",
+
                 data: {
+
                     labels,
-                    datasets: [{
-                        label: "Casos únicos",
-                        data: values
-                    }]
+
+                    datasets: [
+
+                        {
+                            label:
+                                "Casos",
+                            data:
+                                values
+                        }
+
+                    ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
@@ -2041,26 +3280,45 @@ function renderYearlyChart() {
 
 function renderAgentChart() {
 
-    destroyChart("agent");
+    destroyChart(
+        "agent"
+    );
 
-    const map = new Map();
 
-    processedRows.forEach(row => {
+    const map =
+        new Map();
 
-        const agent =
-            row.agent || "Sin agente";
 
-        map.set(
-            agent,
-            (map.get(agent) || 0) + 1
-        );
+    latestByCase.forEach(
+        row => {
 
-    });
+            const agent =
+                row.owner ||
+                "Sin asignar";
 
-    const sorted =
-        Array.from(map.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 20);
+
+            map.set(
+                agent,
+                (
+                    map.get(agent) ||
+                    0
+                ) + 1
+            );
+
+        }
+    );
+
+
+    const entries =
+        Array.from(
+            map.entries()
+        )
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        )
+        .slice(0, 20);
+
 
     charts.agent =
         new Chart(
@@ -2069,67 +3327,129 @@ function renderAgentChart() {
             ),
             {
                 type: "bar",
+
                 data: {
+
                     labels:
-                        sorted.map(x => x[0]),
-                    datasets: [{
-                        label: "Registros",
-                        data:
-                            sorted.map(x => x[1])
-                    }]
+                        entries.map(
+                            x => x[0]
+                        ),
+
+                    datasets: [
+
+                        {
+                            label:
+                                "Casos",
+                            data:
+                                entries.map(
+                                    x => x[1]
+                                )
+                        }
+
+                    ]
+
                 },
+
                 options: {
-                    indexAxis: "y",
+
+                    indexAxis:
+                        "y",
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
 }
 
 
-function renderStatusChart() {
+function renderAgingChart() {
 
-    destroyChart("status");
+    destroyChart(
+        "aging"
+    );
 
-    const map = new Map();
 
-    processedRows.forEach(row => {
+    const less1 =
+        latestByCase.filter(
+            r =>
+                elapsedHours(
+                    r.modifiedDate
+                ) <= 1
+        ).length;
 
-        const status =
-            row.status || "Sin estado";
 
-        map.set(
-            status,
-            (map.get(status) || 0) + 1
-        );
+    const between =
+        latestByCase.filter(
+            r => {
 
-    });
+                const h =
+                    elapsedHours(
+                        r.modifiedDate
+                    );
 
-    const entries =
-        Array.from(map.entries())
-            .sort((a, b) => b[1] - a[1]);
+                return (
+                    h > 1 &&
+                    h <= 4
+                );
 
-    charts.status =
+            }
+        ).length;
+
+
+    const more4 =
+        latestByCase.filter(
+            r =>
+                elapsedHours(
+                    r.modifiedDate
+                ) > 4
+        ).length;
+
+
+    charts.aging =
         new Chart(
             document.getElementById(
-                "statusChart"
+                "agingChart"
             ),
             {
                 type: "doughnut",
+
                 data: {
-                    labels:
-                        entries.map(x => x[0]),
-                    datasets: [{
-                        data:
-                            entries.map(x => x[1])
-                    }]
+
+                    labels: [
+                        "≤ 1 hora",
+                        "1 - 4 horas",
+                        "> 4 horas"
+                    ],
+
+                    datasets: [
+
+                        {
+                            data: [
+                                less1,
+                                between,
+                                more4
+                            ]
+                        }
+
+                    ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
@@ -2137,20 +3457,36 @@ function renderStatusChart() {
 
 
 /* ============================================================
-   GRÁFICAS DETALLADAS
+   CHARTS DETALLADOS
 ============================================================ */
 
 function renderDetailedCharts() {
 
-    destroyChart("dailyDetailed");
-    destroyChart("monthlyDetailed");
-    destroyChart("yearlyDetailed");
+    destroyChart(
+        "dailyDetailed"
+    );
+
+    destroyChart(
+        "monthlyDetailed"
+    );
+
+    destroyChart(
+        "yearlyDetailed"
+    );
+
 
     const daily =
-        groupByDay(processedRows);
+        groupDates(
+            operationalRows,
+            "day"
+        );
+
 
     const dailyLabels =
-        Array.from(daily.keys()).sort();
+        Array.from(
+            daily.keys()
+        ).sort();
+
 
     charts.dailyDetailed =
         new Chart(
@@ -2159,42 +3495,69 @@ function renderDetailedCharts() {
             ),
             {
                 type: "line",
+
                 data: {
-                    labels: dailyLabels,
+
+                    labels:
+                        dailyLabels,
+
                     datasets: [
+
                         {
-                            label: "Casos únicos",
+                            label:
+                                "Casos",
+
                             data:
                                 dailyLabels.map(
                                     k =>
-                                        daily.get(k)
-                                            .cases.size
+                                        daily.get(
+                                            k
+                                        ).cases.size
                                 )
                         },
+
                         {
-                            label: "Registros",
+                            label:
+                                "Registros",
+
                             data:
                                 dailyLabels.map(
                                     k =>
-                                        daily.get(k)
-                                            .records
+                                        daily.get(
+                                            k
+                                        ).records
                                 )
                         }
+
                     ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
 
     const monthly =
-        groupByMonth(processedRows);
+        groupDates(
+            operationalRows,
+            "month"
+        );
+
 
     const monthlyLabels =
-        Array.from(monthly.keys()).sort();
+        Array.from(
+            monthly.keys()
+        ).sort();
+
 
     charts.monthlyDetailed =
         new Chart(
@@ -2203,42 +3566,69 @@ function renderDetailedCharts() {
             ),
             {
                 type: "bar",
+
                 data: {
-                    labels: monthlyLabels,
+
+                    labels:
+                        monthlyLabels,
+
                     datasets: [
+
                         {
-                            label: "Casos únicos",
+                            label:
+                                "Casos",
+
                             data:
                                 monthlyLabels.map(
                                     k =>
-                                        monthly.get(k)
-                                            .cases.size
+                                        monthly.get(
+                                            k
+                                        ).cases.size
                                 )
                         },
+
                         {
-                            label: "Registros",
+                            label:
+                                "Registros",
+
                             data:
                                 monthlyLabels.map(
                                     k =>
-                                        monthly.get(k)
-                                            .records
+                                        monthly.get(
+                                            k
+                                        ).records
                                 )
                         }
+
                     ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
 
 
     const yearly =
-        groupByYear(processedRows);
+        groupDates(
+            operationalRows,
+            "year"
+        );
+
 
     const yearlyLabels =
-        Array.from(yearly.keys()).sort();
+        Array.from(
+            yearly.keys()
+        ).sort();
+
 
     charts.yearlyDetailed =
         new Chart(
@@ -2247,40 +3637,55 @@ function renderDetailedCharts() {
             ),
             {
                 type: "bar",
+
                 data: {
-                    labels: yearlyLabels,
+
+                    labels:
+                        yearlyLabels,
+
                     datasets: [
+
                         {
-                            label: "Casos únicos",
+                            label:
+                                "Casos",
+
                             data:
                                 yearlyLabels.map(
                                     k =>
-                                        yearly.get(k)
-                                            .cases.size
+                                        yearly.get(
+                                            k
+                                        ).cases.size
                                 )
                         },
+
                         {
-                            label: "Registros",
+                            label:
+                                "Registros",
+
                             data:
                                 yearlyLabels.map(
                                     k =>
-                                        yearly.get(k)
-                                            .records
+                                        yearly.get(
+                                            k
+                                        ).records
                                 )
                         }
+
                     ]
+
                 },
+
                 options: {
+
                     responsive: true,
-                    maintainAspectRatio: false
+
+                    maintainAspectRatio:
+                        false
+
                 }
+
             }
         );
-
-
-    renderDailyTable();
-    renderMonthlyTable();
-    renderYearlyTable();
 
 }
 
@@ -2291,105 +3696,1391 @@ function renderDetailedCharts() {
 
 function renderDailyTable() {
 
-    const tbody =
-        document.getElementById(
-            "dailyTable"
-        );
-
-    const groups =
-        groupByDay(processedRows);
-
-    const keys =
-        Array.from(groups.keys()).sort();
-
-    tbody.innerHTML =
-        keys.map(key => {
-
-            const item =
-                groups.get(key);
-
-            const date =
-                new Date(key + "T00:00:00");
-
-            return `
-                <tr>
-                    <td>${formatDate(date)}</td>
-                    <td>${item.records}</td>
-                    <td><strong>${item.cases.size}</strong></td>
-                    <td>${item.agents.size}</td>
-                    <td>${item.repetitions}</td>
-                </tr>
-            `;
-
-        }).join("");
+    renderPeriodTable(
+        "day",
+        "dailyTable"
+    );
 
 }
 
 
 function renderMonthlyTable() {
 
-    const tbody =
-        document.getElementById(
-            "monthlyTable"
-        );
-
-    const groups =
-        groupByMonth(processedRows);
-
-    const keys =
-        Array.from(groups.keys()).sort();
-
-    tbody.innerHTML =
-        keys.map(key => {
-
-            const item =
-                groups.get(key);
-
-            return `
-                <tr>
-                    <td>${key}</td>
-                    <td>${item.records}</td>
-                    <td><strong>${item.cases.size}</strong></td>
-                    <td>${item.agents.size}</td>
-                    <td>${item.repetitions}</td>
-                </tr>
-            `;
-
-        }).join("");
+    renderPeriodTable(
+        "month",
+        "monthlyTable"
+    );
 
 }
 
 
 function renderYearlyTable() {
 
+    renderPeriodTable(
+        "year",
+        "yearlyTable"
+    );
+
+}
+
+
+function renderPeriodTable(
+    mode,
+    elementId
+) {
+
     const tbody =
         document.getElementById(
-            "yearlyTable"
+            elementId
         );
 
+
     const groups =
-        groupByYear(processedRows);
+        groupDates(
+            operationalRows,
+            mode
+        );
+
 
     const keys =
-        Array.from(groups.keys()).sort();
+        Array.from(
+            groups.keys()
+        ).sort();
+
 
     tbody.innerHTML =
-        keys.map(key => {
+        keys.map(
+            key => {
+
+                const item =
+                    groups.get(
+                        key
+                    );
+
+
+                return `
+                    <tr>
+
+                        <td>
+                            ${
+                                mode === "day"
+                                    ? formatDate(
+                                        cotDate(
+                                            ...key.split("-").map(Number)
+                                        )
+                                    )
+                                    : escapeHtml(key)
+                            }
+                        </td>
+
+                        <td>
+                            ${item.records}
+                        </td>
+
+                        <td>
+                            <strong>
+                                ${item.cases.size}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${item.agents.size}
+                        </td>
+
+                        <td>
+                            ${item.repeats}
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* ============================================================
+   DETALLE DE ACTIVIDADES
+============================================================ */
+
+function renderDetailTable() {
+
+    const tbody =
+        document.getElementById(
+            "detailTable"
+        );
+
+
+    const search =
+        norm(
+            document.getElementById(
+                "searchInput"
+            ).value
+        );
+
+
+    const agent =
+        document.getElementById(
+            "agentFilter"
+        ).value;
+
+
+    const management =
+        document.getElementById(
+            "managementFilter"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        ).value;
+
+
+    /*
+     * Este reporte no contiene necesariamente
+     * tipo/estado/gestión tradicional.
+     *
+     * Utilizamos:
+     * evento = gestión
+     * nuevo valor = actividad/cambio
+     */
+
+    const rows =
+        operationalRows.filter(
+            row => {
+
+                const text =
+                    norm([
+                        row.caseNumber,
+                        row.owner,
+                        row.modifiedBy,
+                        row.event,
+                        row.oldValue,
+                        row.newValue,
+                        row.subjectSummary,
+                        row.subjects
+                    ].join(" "));
+
+
+                if (
+                    search &&
+                    !text.includes(search)
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    agent &&
+                    row.owner !== agent
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    management &&
+                    row.event !== management
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    status &&
+                    row.newValue !== status
+                ) {
+                    return false;
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="9"
+                    class="empty">
+                    No hay registros.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        rows.map(
+            row => `
+
+                <tr
+                    class="${
+                        row.isRepeated
+                            ? "row-warning"
+                            : ""
+                    }">
+
+                    <td
+                        class="case-number">
+                        ${escapeHtml(
+                            row.caseNumber
+                        )}
+                    </td>
+
+                    <td>
+                        Propietario del caso
+                    </td>
+
+                    <td>
+                        ${formatDate(
+                            row.modifiedDate
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatTime(
+                            row.modifiedDate
+                        )}
+                    </td>
+
+                    <td
+                        class="datetime">
+                        ${formatDateTime(
+                            row.modifiedDate
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.owner
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.modifiedBy
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            row.event
+                        )}
+                    </td>
+
+                    <td>
+                        ${
+                            row.isRepeated
+                                ? `
+                                    <span
+                                        class="badge badge-yellow">
+                                        Repetido
+                                        (${row.repeatCount})
+                                    </span>
+                                  `
+                                : `
+                                    <span
+                                        class="badge badge-green">
+                                        Único
+                                    </span>
+                                  `
+                        }
+                    </td>
+
+                </tr>
+
+            `
+        ).join("");
+
+}
+
+
+/* ============================================================
+   INCONGRUENCIAS
+============================================================ */
+
+function getRepeatedGroups() {
+
+    const map =
+        new Map();
+
+
+    operationalRows.forEach(
+        row => {
+
+            if (
+                !row.isRepeated
+            ) {
+                return;
+            }
+
+
+            const key =
+                norm(row.caseNumber) +
+                "||" +
+                norm(row.owner);
+
+
+            if (
+                !map.has(key)
+            ) {
+
+                map.set(
+                    key,
+                    row.repeatGroup
+                );
+
+            }
+
+        }
+    );
+
+
+    return Array.from(
+        map.values()
+    );
+
+}
+
+
+function renderInconsistencies() {
+
+    const tbody =
+        document.getElementById(
+            "incTable"
+        );
+
+
+    const search =
+        norm(
+            document.getElementById(
+                "incSearch"
+            ).value
+        );
+
+
+    const agent =
+        document.getElementById(
+            "incAgentFilter"
+        ).value;
+
+
+    const minimum =
+        Number(
+            document.getElementById(
+                "incMinRepeat"
+            ).value
+        );
+
+
+    const groups =
+        getRepeatedGroups()
+        .filter(
+            group => {
+
+                if (
+                    group.length <
+                    minimum
+                ) {
+                    return false;
+                }
+
+
+                const first =
+                    group[0];
+
+
+                if (
+                    agent &&
+                    first.owner !== agent
+                ) {
+                    return false;
+                }
+
+
+                const text =
+                    norm([
+                        first.caseNumber,
+                        first.owner
+                    ].join(" "));
+
+
+                if (
+                    search &&
+                    !text.includes(search)
+                ) {
+                    return false;
+                }
+
+
+                return true;
+
+            }
+        )
+        .sort(
+            (a, b) =>
+                b.length -
+                a.length
+        );
+
+
+    if (!groups.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="7"
+                    class="empty">
+                    No se encontraron
+                    repeticiones.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        groups.map(
+            group => {
+
+                const sorted =
+                    [...group].sort(
+                        (a, b) =>
+                            a.modifiedDate -
+                            b.modifiedDate
+                    );
+
+
+                const first =
+                    sorted[0];
+
+                const last =
+                    sorted[
+                        sorted.length - 1
+                    ];
+
+
+                const changes =
+                    [
+                        ...new Set(
+                            group.map(
+                                r =>
+                                    [
+                                        r.oldValue,
+                                        "→",
+                                        r.newValue
+                                    ].join(" ")
+                            )
+                        )
+                    ];
+
+
+                return `
+                    <tr
+                        class="row-warning">
+
+                        <td
+                            class="case-number">
+                            ${escapeHtml(
+                                first.caseNumber
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                first.owner
+                            )}
+                        </td>
+
+                        <td>
+                            <span
+                                class="badge badge-red">
+                                ${group.length}
+                            </span>
+                        </td>
+
+                        <td
+                            class="datetime">
+                            ${formatDateTime(
+                                first.modifiedDate
+                            )}
+                        </td>
+
+                        <td
+                            class="datetime">
+                            ${formatDateTime(
+                                last.modifiedDate
+                            )}
+                        </td>
+
+                        <td>
+                            ${
+                                changes.map(
+                                    x =>
+                                        `<div>${escapeHtml(x)}</div>`
+                                ).join("")
+                            }
+                        </td>
+
+                        <td>
+
+                            ${
+                                sorted.map(
+                                    r => `
+
+                                        <div
+                                            style="
+                                            margin-bottom:7px;
+                                            ">
+
+                                            <strong>
+                                                ${formatDateTime(
+                                                    r.modifiedDate
+                                                )}
+                                            </strong>
+
+                                            — Modificado por:
+                                            ${escapeHtml(
+                                                r.modifiedBy
+                                            )}
+
+                                            <br>
+
+                                            ${
+                                                escapeHtml(
+                                                    r.oldValue
+                                                )
+                                            }
+
+                                            →
+
+                                            ${
+                                                escapeHtml(
+                                                    r.newValue
+                                                )
+                                            }
+
+                                        </div>
+
+                                    `
+                                ).join("")
+                            }
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* ============================================================
+   DETALLE OPERATIVO
+============================================================ */
+
+function renderOperational() {
+
+    renderOperationalKPIs();
+
+    renderOperationalAgents();
+
+    renderOperationalTopics();
+
+    renderOperationalSubjects();
+
+    renderOperationalModifiers();
+
+    renderOperationalTable();
+
+}
+
+
+/* ============================================================
+   KPIs OPERATIVOS
+============================================================ */
+
+function renderOperationalKPIs() {
+
+    const hours =
+        latestByCase.map(
+            r =>
+                elapsedHours(
+                    r.modifiedDate
+                )
+        );
+
+
+    const min =
+        hours.length
+            ? Math.min(...hours)
+            : 0;
+
+
+    const max =
+        hours.length
+            ? Math.max(...hours)
+            : 0;
+
+
+    const avg =
+        hours.length
+            ? hours.reduce(
+                (a, b) => a + b,
+                0
+            ) / hours.length
+            : 0;
+
+
+    const more4 =
+        hours.filter(
+            h => h > 4
+        ).length;
+
+
+    const topics =
+        new Set();
+
+
+    operationalRows.forEach(
+        row => {
+
+            row.subjectSummary
+                .split(",")
+                .map(
+                    x => x.trim()
+                )
+                .filter(Boolean)
+                .forEach(
+                    x =>
+                        topics.add(x)
+                );
+
+        }
+    );
+
+
+    const modifiers =
+        new Set(
+            operationalRows
+                .map(
+                    r =>
+                        r.modifiedBy
+                )
+                .filter(Boolean)
+        );
+
+
+    document.getElementById(
+        "opMin"
+    ).textContent =
+        min.toFixed(1) +
+        " h";
+
+
+    document.getElementById(
+        "opMax"
+    ).textContent =
+        max.toFixed(1) +
+        " h";
+
+
+    document.getElementById(
+        "opAvg"
+    ).textContent =
+        avg.toFixed(1) +
+        " h";
+
+
+    document.getElementById(
+        "op4h"
+    ).textContent =
+        more4;
+
+
+    document.getElementById(
+        "opTopics"
+    ).textContent =
+        topics.size;
+
+
+    document.getElementById(
+        "opModifiers"
+    ).textContent =
+        modifiers.size;
+
+}
+
+
+/* ============================================================
+   AGENTES OPERATIVOS
+============================================================ */
+
+function renderOperationalAgents() {
+
+    const container =
+        document.getElementById(
+            "agentOperational"
+        );
+
+
+    const map =
+        new Map();
+
+
+    latestByCase.forEach(
+        row => {
+
+            const agent =
+                row.owner ||
+                "Sin asignar";
+
+
+            if (!map.has(agent)) {
+
+                map.set(
+                    agent,
+                    {
+                        cases: 0,
+                        totalHours: 0,
+                        more1: 0,
+                        more4: 0
+                    }
+                );
+
+            }
+
 
             const item =
-                groups.get(key);
+                map.get(agent);
 
-            return `
-                <tr>
-                    <td>${key}</td>
-                    <td>${item.records}</td>
-                    <td><strong>${item.cases.size}</strong></td>
-                    <td>${item.agents.size}</td>
-                    <td>${item.repetitions}</td>
-                </tr>
-            `;
 
-        }).join("");
+            const hours =
+                elapsedHours(
+                    row.modifiedDate
+                );
+
+
+            item.cases++;
+
+            item.totalHours +=
+                hours;
+
+
+            if (hours > 1) {
+                item.more1++;
+            }
+
+
+            if (hours > 4) {
+                item.more4++;
+            }
+
+        }
+    );
+
+
+    const data =
+        Array.from(
+            map.entries()
+        )
+        .sort(
+            (a, b) =>
+                b[1].cases -
+                a[1].cases
+        );
+
+
+    const maxCases =
+        data.length
+            ? data[0][1].cases
+            : 1;
+
+
+    container.innerHTML =
+        data.map(
+            ([agent, item]) => {
+
+                const avg =
+                    item.totalHours /
+                    item.cases;
+
+
+                return `
+
+                    <div
+                        class="agent-item">
+
+                        <div
+                            class="agent-head">
+
+                            <span
+                                class="agent-name">
+
+                                ${escapeHtml(
+                                    agent
+                                )}
+
+                            </span>
+
+                            <span
+                                class="agent-value">
+
+                                ${item.cases}
+                                casos
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            class="small">
+
+                            Promedio:
+                            <strong>
+                                ${avg.toFixed(1)} h
+                            </strong>
+
+                            &nbsp; | &nbsp;
+
+                            >1h:
+                            ${item.more1}
+
+                            &nbsp; | &nbsp;
+
+                            >4h:
+                            ${item.more4}
+
+                        </div>
+
+
+                        <div
+                            class="progress">
+
+                            <div
+                                class="progress-bar"
+                                style="
+                                width:${
+                                    (
+                                        item.cases /
+                                        maxCases
+                                    ) * 100
+                                }%;
+                                ">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* ============================================================
+   TOPICS
+============================================================ */
+
+function countCommaValues(
+    rows,
+    field
+) {
+
+    const map =
+        new Map();
+
+
+    rows.forEach(
+        row => {
+
+            String(
+                row[field] || ""
+            )
+            .split(",")
+            .map(
+                x => x.trim()
+            )
+            .filter(Boolean)
+            .forEach(
+                value => {
+
+                    map.set(
+                        value,
+                        (
+                            map.get(
+                                value
+                            ) || 0
+                        ) + 1
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    return Array.from(
+        map.entries()
+    )
+    .sort(
+        (a, b) =>
+            b[1] - a[1]
+    );
+
+}
+
+
+function renderOperationalTopics() {
+
+    renderCountList(
+        "topicOperational",
+        countCommaValues(
+            operationalRows,
+            "subjectSummary"
+        )
+    );
+
+}
+
+
+function renderOperationalSubjects() {
+
+    renderCountList(
+        "subjectOperational",
+        countCommaValues(
+            operationalRows,
+            "subjects"
+        )
+    );
+
+}
+
+
+function renderCountList(
+    elementId,
+    entries
+) {
+
+    const container =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (!entries.length) {
+
+        container.innerHTML = `
+            <div class="empty">
+                No hay información.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        entries.map(
+            ([name, count]) => `
+
+                <div
+                    class="topic-item">
+
+                    <span
+                        class="topic-name">
+
+                        ${escapeHtml(
+                            name
+                        )}
+
+                    </span>
+
+                    <span
+                        class="topic-count">
+
+                        ${count}
+
+                    </span>
+
+                </div>
+
+            `
+        ).join("");
+
+}
+
+
+/* ============================================================
+   MODIFICADORES
+============================================================ */
+
+function renderOperationalModifiers() {
+
+    const map =
+        new Map();
+
+
+    operationalRows.forEach(
+        row => {
+
+            const name =
+                row.modifiedBy ||
+                "Sin modificar por";
+
+
+            map.set(
+                name,
+                (
+                    map.get(name) ||
+                    0
+                ) + 1
+            );
+
+        }
+    );
+
+
+    const entries =
+        Array.from(
+            map.entries()
+        )
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        );
+
+
+    renderCountList(
+        "modifierOperational",
+        entries
+    );
+
+}
+
+
+/* ============================================================
+   TABLA OPERATIVA
+============================================================ */
+
+function renderOperationalTable() {
+
+    const tbody =
+        document.getElementById(
+            "operationalTable"
+        );
+
+
+    const search =
+        norm(
+            document.getElementById(
+                "operationalSearch"
+            ).value
+        );
+
+
+    const agent =
+        document.getElementById(
+            "operationalAgentFilter"
+        ).value;
+
+
+    const age =
+        document.getElementById(
+            "operationalAgeFilter"
+        ).value;
+
+
+    let rows =
+        [...latestByCase];
+
+
+    rows =
+        rows.filter(
+            row => {
+
+                const hours =
+                    elapsedHours(
+                        row.modifiedDate
+                    );
+
+
+                if (
+                    age === "0" &&
+                    hours > 1
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    age === "1" &&
+                    (
+                        hours <= 1 ||
+                        hours > 4
+                    )
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    age === "4" &&
+                    hours <= 4
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    agent &&
+                    row.owner !== agent
+                ) {
+                    return false;
+                }
+
+
+                if (search) {
+
+                    const text =
+                        norm([
+                            row.caseNumber,
+                            row.owner,
+                            row.modifiedBy,
+                            row.oldValue,
+                            row.newValue,
+                            row.subjectSummary,
+                            row.subjects
+                        ].join(" "));
+
+
+                    if (
+                        !text.includes(
+                            search
+                        )
+                    ) {
+                        return false;
+                    }
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    rows.sort(
+        (a, b) =>
+            elapsedHours(
+                b.modifiedDate
+            ) -
+            elapsedHours(
+                a.modifiedDate
+            )
+    );
+
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="12"
+                    class="empty">
+
+                    No hay registros para
+                    los filtros seleccionados.
+
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        rows.map(
+            row => {
+
+                const hours =
+                    elapsedHours(
+                        row.modifiedDate
+                    );
+
+
+                const badge =
+                    agingClass(
+                        hours
+                    );
+
+
+                return `
+
+                    <tr
+                        class="${
+                            badge === "red"
+                                ? "row-critical"
+                                : badge === "yellow"
+                                    ? "row-warning"
+                                    : ""
+                        }">
+
+                        <td
+                            class="case-number">
+
+                            ${escapeHtml(
+                                row.caseNumber
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.owner
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.modifiedBy
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${formatDate(
+                                row.modifiedDate
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${formatTime(
+                                row.modifiedDate
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            <strong>
+
+                                ${hours.toFixed(
+                                    1
+                                )}
+                                h
+
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+
+                            <span
+                                class="
+                                    badge
+                                    ${
+                                        badge === "red"
+                                            ? "badge-red"
+                                            : badge === "yellow"
+                                                ? "badge-yellow"
+                                                : "badge-green"
+                                    }
+                                ">
+
+                                ${agingLabel(
+                                    hours
+                                )}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.oldValue
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.newValue
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${row.daysOpened}
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.subjectSummary
+                            )}
+
+                        </td>
+
+
+                        <td>
+
+                            ${escapeHtml(
+                                row.subjects
+                            )}
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        ).join("");
 
 }
 
@@ -2401,555 +5092,217 @@ function renderYearlyTable() {
 function populateFilters() {
 
     const agents =
-        [...new Set(
-            processedRows
-                .map(r => r.agent)
-                .filter(Boolean)
-        )]
-        .sort((a, b) =>
-            a.localeCompare(b)
-        );
-
-    const managements =
-        [...new Set(
-            processedRows
-                .map(r => r.management)
-                .filter(Boolean)
-        )]
-        .sort((a, b) =>
-            a.localeCompare(b)
-        );
-
-    const statuses =
-        [...new Set(
-            processedRows
-                .map(r => r.status)
-                .filter(Boolean)
-        )]
-        .sort((a, b) =>
-            a.localeCompare(b)
-        );
-
-    const agentFilter =
-        document.getElementById(
-            "agentFilter"
-        );
-
-    const managementFilter =
-        document.getElementById(
-            "managementFilter"
-        );
-
-    const statusFilter =
-        document.getElementById(
-            "statusFilter"
-        );
-
-    agentFilter.innerHTML =
-        `<option value="">Todos los agentes</option>` +
-        agents.map(
-            agent =>
-                `<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`
-        ).join("");
-
-    managementFilter.innerHTML =
-        `<option value="">Todos los tipos de gestión</option>` +
-        managements.map(
-            management =>
-                `<option value="${escapeHtml(management)}">${escapeHtml(management)}</option>`
-        ).join("");
-
-    statusFilter.innerHTML =
-        `<option value="">Todos los estados</option>` +
-        statuses.map(
-            status =>
-                `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`
-        ).join("");
-
-
-    const incAgents =
-        document.getElementById(
-            "incAgentFilter"
-        );
-
-    incAgents.innerHTML =
-        `<option value="">Todos los agentes</option>` +
-        agents.map(
-            agent =>
-                `<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`
-        ).join("");
-
-}
-
-
-/* ============================================================
-   DETALLE
-============================================================ */
-
-function getFilteredRows() {
-
-    const search =
-        normalizeText(
-            document.getElementById(
-                "searchInput"
-            ).value
-        );
-
-    const agent =
-        document.getElementById(
-            "agentFilter"
-        ).value;
-
-    const management =
-        document.getElementById(
-            "managementFilter"
-        ).value;
-
-    const status =
-        document.getElementById(
-            "statusFilter"
-        ).value;
-
-    return processedRows.filter(row => {
-
-        const searchable = normalizeText(
-            [
-                row.caseNumber,
-                row.agent,
-                row.email,
-                row.management,
-                row.status,
-                row.type
-            ].join(" ")
-        );
-
-        if (
-            search &&
-            !searchable.includes(search)
-        ) {
-            return false;
-        }
-
-        if (
-            agent &&
-            row.agent !== agent
-        ) {
-            return false;
-        }
-
-        if (
-            management &&
-            row.management !== management
-        ) {
-            return false;
-        }
-
-        if (
-            status &&
-            row.status !== status
-        ) {
-            return false;
-        }
-
-        return true;
-
-    });
-
-}
-
-
-function renderDetailTable() {
-
-    const tbody =
-        document.getElementById(
-            "detailTable"
-        );
-
-    const rows =
-        getFilteredRows();
-
-    if (!rows.length) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="empty">
-                    No hay registros para los filtros seleccionados.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    tbody.innerHTML =
-        rows.map(row => {
-
-            const repeated =
-                row.isRepeated;
-
-            return `
-                <tr class="${repeated ? "incongruencia" : ""}">
-
-                    <td class="case-number">
-                        ${escapeHtml(row.caseNumber)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(row.type)}
-                    </td>
-
-                    <td>
-                        <span class="badge">
-                            ${escapeHtml(row.status)}
-                        </span>
-                    </td>
-
-                    <td>
-                        ${formatDate(row.date)}
-                    </td>
-
-                    <td>
-                        ${formatTime(row.time)}
-                    </td>
-
-                    <td class="datetime">
-                        ${formatDateTime(row.registrationDate)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(row.agent)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(row.management)}
-                    </td>
-
-                    <td>
-                        ${
-                            repeated
-                                ? `<span class="badge repeat-badge">
-                                    Repetido (${row.repeatCount})
-                                   </span>`
-                                : `<span class="badge ok-badge">
-                                    Único
-                                   </span>`
-                        }
-                    </td>
-
-                </tr>
-            `;
-
-        }).join("");
-
-}
-
-
-/* ============================================================
-   INCONGRUENCIAS
-============================================================ */
-
-function updateInconsistencyKPIs() {
-
-    const groups =
-        getRepeatedGroups();
-
-    const records =
-        groups.reduce(
-            (total, group) =>
-                total + group.length,
-            0
-        );
-
-    const agents =
-        new Set(
-            groups.map(
-                group =>
-                    group[0]?.agent
+        [
+            ...new Set(
+                operationalRows
+                    .map(
+                        r => r.owner
+                    )
+                    .filter(Boolean)
             )
-        ).size;
-
-    document.getElementById(
-        "incCases"
-    ).textContent =
-        groups.length;
-
-    document.getElementById(
-        "incRecords"
-    ).textContent =
-        records;
-
-    document.getElementById(
-        "incAgents"
-    ).textContent =
-        agents;
-
-}
-
-
-function getFilteredInconsistencies() {
-
-    const search =
-        normalizeText(
-            document.getElementById(
-                "incSearch"
-            ).value
-        );
-
-    const agent =
-        document.getElementById(
-            "incAgentFilter"
-        ).value;
-
-    const minRepeat =
-        Number(
-            document.getElementById(
-                "incMinRepeat"
-            ).value
-        );
-
-    return getRepeatedGroups()
-        .filter(group => {
-
-            if (
-                group.length <
-                minRepeat
-            ) {
-                return false;
-            }
-
-            const first =
-                group[0];
-
-            if (
-                agent &&
-                first.agent !== agent
-            ) {
-                return false;
-            }
-
-            if (search) {
-
-                const text =
-                    normalizeText(
-                        [
-                            first.caseNumber,
-                            first.agent
-                        ].join(" ")
-                    );
-
-                if (
-                    !text.includes(search)
-                ) {
-                    return false;
-                }
-
-            }
-
-            return true;
-
-        })
+        ]
         .sort(
             (a, b) =>
-                b.length - a.length
+                a.localeCompare(b)
         );
+
+
+    const managements =
+        [
+            ...new Set(
+                operationalRows
+                    .map(
+                        r => r.event
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort();
+
+
+    const statuses =
+        [
+            ...new Set(
+                operationalRows
+                    .map(
+                        r => r.newValue
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort();
+
+
+    fillSelect(
+        "agentFilter",
+        agents,
+        "Todos los agentes"
+    );
+
+
+    fillSelect(
+        "incAgentFilter",
+        agents,
+        "Todos los agentes"
+    );
+
+
+    fillSelect(
+        "operationalAgentFilter",
+        agents,
+        "Todos los agentes"
+    );
+
+
+    fillSelect(
+        "managementFilter",
+        managements,
+        "Todas las gestiones"
+    );
+
+
+    fillSelect(
+        "statusFilter",
+        statuses,
+        "Todos los estados"
+    );
 
 }
 
 
-function renderInconsistencyTable() {
+function fillSelect(
+    id,
+    values,
+    firstText
+) {
 
-    const tbody =
+    const select =
         document.getElementById(
-            "incTable"
+            id
         );
 
-    const groups =
-        getFilteredInconsistencies();
 
-    if (!groups.length) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="empty">
-                    No se encontraron incongruencias con los filtros seleccionados.
-                </td>
-            </tr>
-        `;
-
+    if (!select) {
         return;
     }
 
-    tbody.innerHTML =
-        groups.map(group => {
 
-            const first =
-                group[0];
-
-            const sorted =
-                [...group].sort(
-                    (a, b) =>
-                        (
-                            a.registrationDate?.getTime() || 0
-                        ) -
-                        (
-                            b.registrationDate?.getTime() || 0
-                        )
-                );
-
-            const firstDate =
-                sorted[0]?.registrationDate;
-
-            const lastDate =
-                sorted[sorted.length - 1]
-                    ?.registrationDate;
-
-            const changes =
-                [...new Set(
-                    group
-                        .map(row =>
-                            [
-                                row.management,
-                                row.status,
-                                row.type
-                            ]
-                            .filter(Boolean)
-                            .join(" / ")
-                        )
-                        .filter(Boolean)
-                )];
-
-            const detail =
-                group
-                    .sort(
-                        (a, b) =>
-                            (
-                                a.registrationDate?.getTime() || 0
-                            ) -
-                            (
-                                b.registrationDate?.getTime() || 0
-                            )
-                    )
-                    .map(row => {
-
-                        return `
-                            <div class="repeat-details">
-                                <strong>${formatDateTime(row.registrationDate)}</strong>
-                                — Gestión: ${escapeHtml(row.management || "Sin gestión")}
-                                — Estado: ${escapeHtml(row.status || "Sin estado")}
-                                — Tipo: ${escapeHtml(row.type || "Sin tipo")}
-                            </div>
-                        `;
-
-                    })
-                    .join("");
-
-            return `
-                <tr class="incongruencia">
-
-                    <td class="case-number">
-                        ${escapeHtml(first.caseNumber)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(first.agent)}
-                    </td>
-
-                    <td>
-                        <span class="badge repeat-badge">
-                            ${group.length}
-                        </span>
-                    </td>
-
-                    <td class="datetime">
-                        ${formatDateTime(firstDate)}
-                    </td>
-
-                    <td class="datetime">
-                        ${formatDateTime(lastDate)}
-                    </td>
-
-                    <td>
-                        ${changes
-                            .map(
-                                x =>
-                                    `<div>${escapeHtml(x)}</div>`
-                            )
-                            .join("")
-                        }
-                    </td>
-
-                    <td>
-                        ${detail}
-                    </td>
-
-                </tr>
-            `;
-
-        }).join("");
+    select.innerHTML =
+        `<option value="">
+            ${escapeHtml(
+                firstText
+            )}
+        </option>` +
+        values.map(
+            value =>
+                `<option value="${escapeHtml(value)}">
+                    ${escapeHtml(value)}
+                 </option>`
+        ).join("");
 
 }
 
 
 /* ============================================================
-   RENDER GENERAL
+   EVENTOS
 ============================================================ */
 
-function renderAllTables() {
+document
+    .getElementById(
+        "fileInput"
+    )
+    .addEventListener(
+        "change",
+        processFile
+    );
 
-    renderDetailTable();
-
-    renderInconsistencyTable();
-
-}
-
-
-/* ============================================================
-   EVENTOS DE FILTROS
-============================================================ */
 
 [
     "searchInput",
     "agentFilter",
     "managementFilter",
     "statusFilter"
-].forEach(id => {
+]
+.forEach(
+    id => {
 
-    const element =
-        document.getElementById(id);
+        const element =
+            document.getElementById(
+                id
+            );
 
-    element.addEventListener(
-        "input",
-        renderDetailTable
-    );
 
-    element.addEventListener(
-        "change",
-        renderDetailTable
-    );
+        element.addEventListener(
+            "input",
+            renderDetailTable
+        );
 
-});
+
+        element.addEventListener(
+            "change",
+            renderDetailTable
+        );
+
+    }
+);
 
 
 [
     "incSearch",
     "incAgentFilter",
     "incMinRepeat"
-].forEach(id => {
+]
+.forEach(
+    id => {
 
-    const element =
-        document.getElementById(id);
+        const element =
+            document.getElementById(
+                id
+            );
 
-    element.addEventListener(
-        "input",
-        renderInconsistencyTable
-    );
 
-    element.addEventListener(
-        "change",
-        renderInconsistencyTable
-    );
+        element.addEventListener(
+            "input",
+            renderInconsistencies
+        );
 
-});
+
+        element.addEventListener(
+            "change",
+            renderInconsistencies
+        );
+
+    }
+);
+
+
+[
+    "operationalSearch",
+    "operationalAgentFilter",
+    "operationalAgeFilter"
+]
+.forEach(
+    id => {
+
+        const element =
+            document.getElementById(
+                id
+            );
+
+
+        element.addEventListener(
+            "input",
+            renderOperationalTable
+        );
+
+
+        element.addEventListener(
+            "change",
+            renderOperationalTable
+        );
+
+    }
+);
 
 
 document
@@ -2972,7 +5325,33 @@ document
                 "incMinRepeat"
             ).value = "2";
 
-            renderInconsistencyTable();
+            renderInconsistencies();
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "clearOperationalFilters"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            document.getElementById(
+                "operationalSearch"
+            ).value = "";
+
+            document.getElementById(
+                "operationalAgentFilter"
+            ).value = "";
+
+            document.getElementById(
+                "operationalAgeFilter"
+            ).value = "";
+
+            renderOperationalTable();
 
         }
     );
@@ -2983,58 +5362,92 @@ document
 ============================================================ */
 
 document
-    .querySelectorAll(".tab-button")
-    .forEach(button => {
+    .querySelectorAll(
+        ".tab-button"
+    )
+    .forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                const target =
-                    button.dataset.tab;
+                    const target =
+                        button.dataset.tab;
 
-                document
-                    .querySelectorAll(
-                        ".tab-button"
-                    )
-                    .forEach(btn =>
-                        btn.classList.remove(
-                            "active"
+
+                    document
+                        .querySelectorAll(
+                            ".tab-button"
                         )
-                    );
+                        .forEach(
+                            b =>
+                                b.classList.remove(
+                                    "active"
+                                )
+                        );
 
-                document
-                    .querySelectorAll(
-                        ".tab"
-                    )
-                    .forEach(tab =>
-                        tab.classList.remove(
-                            "active"
+
+                    document
+                        .querySelectorAll(
+                            ".tab"
                         )
-                    );
+                        .forEach(
+                            t =>
+                                t.classList.remove(
+                                    "active"
+                                )
+                        );
 
-                button.classList.add(
-                    "active"
-                );
 
-                document
-                    .getElementById(target)
-                    .classList.add(
+                    button.classList.add(
                         "active"
                     );
 
-            }
-        );
 
-    });
+                    document
+                        .getElementById(
+                            target
+                        )
+                        .classList.add(
+                            "active"
+                        );
+
+                }
+            );
+
+        }
+    );
 
 
 /* ============================================================
-   ESTADO INICIAL
+   STATUS INICIAL
 ============================================================ */
 
+function showStatus(
+    message,
+    type
+) {
+
+    const element =
+        document.getElementById(
+            "status"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        "status show " +
+        type;
+
+}
+
+
 showStatus(
-    "Selecciona el archivo Excel de la operación para comenzar.",
+    "Selecciona el Excel de Gestión de Asignaciones para comenzar.",
     "info"
 );
 
