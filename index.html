@@ -1,5836 +1,3044 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Productivity Operations Dashboard</title>
 
-<!-- SheetJS -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
-/* =========================================================
-   RESET
-   ========================================================= */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-:root{
-
-    --navy:#002b5c;
-    --blue:#0066ff;
-    --blue-dark:#004fd6;
-
-    --bg:#f4f7fb;
-    --white:#ffffff;
-
-    --text:#1f2937;
-    --muted:#6b7280;
-
-    --border:#dce2ea;
-
-    --green:#198754;
-    --yellow:#e6a700;
-    --red:#dc3545;
-
-    --purple:#6f42c1;
-
-}
-
-body{
-
-    background:var(--bg);
-
-    color:var(--text);
-
-    min-height:100vh;
-
-    padding:20px;
-
-    font-family:
-        "Segoe UI",
-        Tahoma,
-        Geneva,
-        Verdana,
-        sans-serif;
-
-}
-
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-.header{
-
-    background:
-        linear-gradient(
-            135deg,
-            #002b5c,
-            #00529c
-        );
-
-    color:white;
-
-    padding:28px;
-
-    border-radius:15px;
-
-    margin-bottom:20px;
-
-    box-shadow:
-        0 5px 18px
-        rgba(0,43,92,.16);
-
-}
-
-.header h1{
-
-    font-size:29px;
-
-    margin-bottom:7px;
-
-}
-
-.header p{
-
-    font-size:14px;
-
-    opacity:.92;
-
-}
-
-
-/* =========================================================
-   CONTROLES
-   ========================================================= */
-
-.controls{
-
-    background:white;
-
-    padding:18px;
-
-    border-radius:12px;
-
-    margin-bottom:15px;
-
-    display:flex;
-
-    gap:10px;
-
-    flex-wrap:wrap;
-
-    align-items:center;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0,0,0,.06);
-
-}
-
-.file-area{
-
-    flex:1;
-
-    min-width:280px;
-
-}
-
-input[type=file]{
-
-    width:100%;
-
-    padding:10px;
-
-    border:
-        1px solid var(--border);
-
-    border-radius:8px;
-
-    background:white;
-
-    cursor:pointer;
-
-}
-
-button{
-
-    border:0;
-
-    border-radius:8px;
-
-    padding:11px 17px;
-
-    background:var(--blue);
-
-    color:white;
-
-    font-weight:600;
-
-    cursor:pointer;
-
-    transition:.2s;
-
-}
-
-button:hover:not(:disabled){
-
-    background:var(--blue-dark);
-
-    transform:translateY(-1px);
-
-}
-
-button:disabled{
-
-    background:#aeb8c7;
-
-    cursor:not-allowed;
-
-}
-
-.btn-secondary{
-
-    background:#56687d;
-
+* {
+    box-sizing: border-box;
 }
-
-.btn-secondary:hover:not(:disabled){
 
-    background:#3f5062;
-
+:root {
+    --navy: #062f61;
+    --navy-dark: #03244a;
+    --blue: #0b5cab;
+    --blue-light: #eaf3ff;
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #d8e0ea;
+    --success: #16803c;
+    --warning: #c77d00;
+    --danger: #c62828;
+    --shadow: 0 3px 12px rgba(0,0,0,.07);
 }
-
-.btn-purple{
 
-    background:var(--purple);
-
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
 }
-
-.btn-purple:hover:not(:disabled){
-
-    background:#59349a;
 
+header {
+    background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+    color: white;
+    padding: 22px 28px;
 }
-
-
-/* =========================================================
-   STATUS
-   ========================================================= */
-
-#status{
-
-    min-height:23px;
-
-    margin-bottom:8px;
-
-    font-weight:600;
 
+.header-content {
+    max-width: 1600px;
+    margin: auto;
 }
 
-.ok-msg{
-
-    color:var(--green);
-
+header h1 {
+    margin: 0 0 6px;
+    font-size: 25px;
 }
-
-.err-msg{
 
-    color:var(--red);
-
+header p {
+    margin: 0;
+    opacity: .85;
+    font-size: 14px;
 }
-
-.info-msg{
-
-    color:var(--blue);
 
+.container {
+    width: min(1600px, calc(100% - 32px));
+    margin: 20px auto 40px;
 }
 
-#lastUpdate{
-
-    color:var(--muted);
-
-    font-size:13px;
-
-    margin-bottom:18px;
-
+.upload-box {
+    background: white;
+    border: 2px dashed #b9c7d8;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
 }
-
-
-/* =========================================================
-   FILE INFO
-   ========================================================= */
 
-.file-info{
-
-    display:none;
-
-    background:#edf6ff;
-
-    border:
-        1px solid #c8e2ff;
-
-    padding:12px 15px;
-
-    border-radius:8px;
-
-    margin-bottom:20px;
-
-    font-size:13px;
-
+.upload-box h2 {
+    margin: 0 0 8px;
+    color: var(--navy);
+    font-size: 18px;
 }
-
-.file-info strong{
 
-    color:var(--navy);
-
+.upload-box p {
+    color: var(--muted);
+    margin: 5px 0 16px;
 }
-
-
-/* =========================================================
-   SECTIONS
-   ========================================================= */
 
-.section{
-
-    margin-top:25px;
-
-    margin-bottom:25px;
-
+input[type="file"] {
+    display: block;
+    width: 100%;
+    max-width: 550px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: white;
 }
-
-.section-header{
-
-    display:flex;
-
-    align-items:center;
 
-    justify-content:space-between;
-
-    gap:10px;
-
-    flex-wrap:wrap;
-
-    margin-bottom:12px;
-
+.status {
+    margin-top: 12px;
+    padding: 10px 13px;
+    border-radius: 7px;
+    display: none;
+    font-size: 14px;
 }
-
-.section h2{
-
-    color:var(--navy);
 
-    font-size:20px;
-
+.status.show {
+    display: block;
 }
-
-
-/* =========================================================
-   KPI
-   ========================================================= */
-
-.cards{
-
-    display:grid;
 
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(190px,1fr)
-        );
-
-    gap:15px;
-
-    margin-bottom:25px;
-
+.status.success {
+    background: #e8f7ed;
+    color: #12652f;
 }
-
-.card{
-
-    background:white;
-
-    border-radius:12px;
 
-    padding:20px;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0,0,0,.06);
-
-    border-left:5px solid var(--blue);
-
+.status.error {
+    background: #fdeaea;
+    color: #9e2020;
 }
 
-.card.green{
-
-    border-left-color:var(--green);
-
+.status.info {
+    background: #eaf3ff;
+    color: #074b91;
 }
-
-.card.yellow{
 
-    border-left-color:var(--yellow);
-
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 18px;
+    overflow-x: auto;
 }
-
-.card.red{
-
-    border-left-color:var(--red);
 
+.tab-button {
+    border: 0;
+    background: #e1e8f0;
+    color: #26384d;
+    padding: 12px 18px;
+    border-radius: 7px 7px 0 0;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
-.card.purple{
-
-    border-left-color:var(--purple);
-
+.tab-button.active {
+    background: var(--navy);
+    color: white;
 }
-
-.card h3{
 
-    color:var(--muted);
-
-    font-size:13px;
-
-    margin-bottom:10px;
-
+.tab {
+    display: none;
 }
-
-.card .value{
-
-    font-size:29px;
-
-    font-weight:700;
 
+.tab.active {
+    display: block;
 }
-
-
-/* =========================================================
-   GRID
-   ========================================================= */
-
-.grid-2{
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(
-            2,
-            minmax(0,1fr)
-        );
-
-    gap:20px;
 
+.section-title {
+    margin: 25px 0 12px;
+    color: var(--navy);
+    font-size: 20px;
 }
 
-.panel{
-
-    background:white;
-
-    border-radius:12px;
-
-    padding:18px;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0,0,0,.06);
-
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+    gap: 14px;
 }
-
-.panel h3{
 
-    color:var(--navy);
-
-    margin-bottom:15px;
-
-    font-size:17px;
-
+.kpi {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 17px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--blue);
 }
-
-
-/* =========================================================
-   CHART
-   ========================================================= */
-
-.chart{
 
-    display:flex;
-
-    flex-direction:column;
-
-    gap:9px;
-
+.kpi .label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: bold;
 }
-
-.bar-row{
-
-    display:grid;
 
-    grid-template-columns:
-        130px
-        1fr
-        55px;
-
-    gap:8px;
-
-    align-items:center;
-
+.kpi .value {
+    font-size: 27px;
+    font-weight: bold;
+    color: var(--navy);
+    margin-top: 7px;
 }
-
-.bar-label{
-
-    font-size:12px;
-
-    overflow:hidden;
 
-    text-overflow:ellipsis;
-
-    white-space:nowrap;
-
+.kpi .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
 }
-
-.bar-container{
-
-    height:22px;
-
-    background:#edf0f5;
-
-    border-radius:5px;
 
-    overflow:hidden;
-
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
 }
-
-.bar{
-
-    height:100%;
-
-    background:var(--blue);
-
-    border-radius:5px;
-
-    min-width:2px;
 
-    transition:width .3s;
-
+.chart-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    min-height: 350px;
 }
-
-.bar-value{
-
-    text-align:right;
 
-    font-weight:600;
-
-    font-size:12px;
-
+.chart-card.full {
+    grid-column: 1 / -1;
 }
-
-
-/* =========================================================
-   TABLE
-   ========================================================= */
-
-.table-wrap{
-
-    max-height:550px;
-
-    overflow:auto;
-
-    border-radius:10px;
-
-    background:white;
 
-    box-shadow:
-        0 2px 8px
-        rgba(0,0,0,.05);
-
+.chart-card h3 {
+    margin: 0 0 15px;
+    color: var(--navy);
+    font-size: 16px;
 }
-
-table{
-
-    width:100%;
 
-    border-collapse:collapse;
-
-    background:white;
-
+.chart-container {
+    position: relative;
+    height: 290px;
 }
-
-th{
-
-    position:sticky;
-
-    top:0;
-
-    z-index:2;
-
-    background:var(--navy);
-
-    color:white;
-
-    padding:11px;
 
-    text-align:left;
-
-    white-space:nowrap;
-
-    font-size:13px;
-
+.filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 10px;
+    background: white;
+    padding: 14px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    margin-bottom: 15px;
 }
-
-td{
-
-    padding:10px 11px;
 
-    border-bottom:
-        1px solid #e8ebef;
-
-    white-space:nowrap;
-
-    font-size:13px;
-
+.filters input,
+.filters select {
+    min-width: 0;
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
 }
 
-tbody tr:hover{
-
-    background:#f4f8ff;
-
+.table-wrapper {
+    overflow: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
 }
-
 
-/* =========================================================
-   BADGES
-   ========================================================= */
-
-.badge{
-
-    display:inline-block;
-
-    padding:4px 8px;
-
-    border-radius:20px;
-
-    font-size:11px;
-
-    font-weight:600;
-
-    background:#edf2f7;
-
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 950px;
 }
-
-.badge-green{
 
-    background:#dff5e7;
-
-    color:#176b38;
-
+thead th {
+    background: var(--navy);
+    color: white;
+    text-align: left;
+    padding: 12px 11px;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
-
-.badge-yellow{
 
-    background:#fff1c7;
-
-    color:#806000;
-
+tbody td {
+    padding: 11px;
+    border-bottom: 1px solid #e2e7ed;
+    font-size: 13px;
+    vertical-align: top;
 }
-
-.badge-red{
 
-    background:#ffe1e1;
-
-    color:#a51e1e;
-
+tbody tr:hover {
+    background: #f6f9fd;
 }
-
-.badge-blue{
 
-    background:#dcecff;
-
-    color:#0759a5;
-
+.case-number {
+    font-weight: bold;
+    color: var(--navy);
 }
-
-.badge-purple{
 
-    background:#eadfff;
-
-    color:#59349a;
-
+.datetime {
+    white-space: nowrap;
+    font-weight: bold;
 }
-
 
-/* =========================================================
-   REPEATED CASE
-   ========================================================= */
-
-.repeat-card{
-
-    background:white;
-
-    border-radius:12px;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0,0,0,.06);
-
-    margin-bottom:15px;
-
-    overflow:hidden;
-
-    border-left:
-        5px solid var(--purple);
-
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: #edf2f7;
 }
-
-.repeat-header{
-
-    padding:15px;
-
-    background:#faf8ff;
-
-    display:flex;
 
-    align-items:center;
-
-    justify-content:space-between;
-
-    gap:10px;
-
-    flex-wrap:wrap;
-
+.repeat-badge {
+    background: #fff0d5;
+    color: #8a5700;
+    font-weight: bold;
 }
-
-.repeat-header strong{
 
-    color:var(--navy);
-
+.ok-badge {
+    background: #e8f7ed;
+    color: #12652f;
 }
-
-.repeat-summary{
-
-    display:flex;
 
-    gap:8px;
-
-    flex-wrap:wrap;
-
+.incongruencia {
+    background: #fff8e8;
 }
-
 
-/* =========================================================
-   TIMELINE
-   ========================================================= */
-
-.timeline{
-
-    padding:10px 15px 15px;
-
+.empty {
+    padding: 30px;
+    text-align: center;
+    color: var(--muted);
 }
-
-.timeline-item{
-
-    position:relative;
-
-    padding:
-        12px
-        10px
-        14px
-        28px;
 
-    border-left:
-        2px solid #d9caff;
-
+.legend-box {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
-
-.timeline-item:last-child{
-
-    border-left-color:
-        transparent;
 
+.summary-note {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 8px 0 15px;
 }
-
-.timeline-dot{
-
-    position:absolute;
-
-    left:-6px;
 
-    top:15px;
-
-    width:10px;
-
-    height:10px;
-
-    border-radius:50%;
-
-    background:var(--purple);
-
+.agent-card {
+    background: white;
+    border-radius: 9px;
+    box-shadow: var(--shadow);
+    padding: 15px;
+    margin-bottom: 10px;
 }
-
-.timeline-date{
 
-    color:var(--muted);
-
-    font-size:12px;
-
-    margin-bottom:4px;
-
-    font-weight:600;
-
+.agent-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
 }
-
-.timeline-user{
-
-    font-weight:700;
 
-    color:var(--navy);
-
-    font-size:14px;
-
+.agent-name {
+    font-weight: bold;
+    color: var(--navy);
 }
-
-.timeline-detail{
-
-    color:#4b5563;
-
-    font-size:12px;
-
-    margin-top:4px;
 
+.progress {
+    height: 8px;
+    background: #e5eaf0;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 9px;
 }
-
-.timeline-gap{
-
-    display:inline-block;
-
-    margin-top:7px;
-
-    padding:4px 8px;
-
-    border-radius:5px;
-
-    background:#fff5d9;
 
-    color:#806000;
-
-    font-size:11px;
-
-    font-weight:600;
-
+.progress-bar {
+    height: 100%;
+    background: var(--blue);
 }
-
-
-/* =========================================================
-   SEARCH
-   ========================================================= */
-
-.search{
-
-    width:100%;
-
-    padding:12px 14px;
-
-    border:
-        1px solid var(--border);
-
-    border-radius:8px;
-
-    background:white;
-
-    outline:none;
 
-    margin-bottom:12px;
-
+.small {
+    font-size: 12px;
+    color: var(--muted);
 }
-
-.search:focus{
-
-    border-color:var(--blue);
 
-    box-shadow:
-        0 0 0 3px
-        rgba(0,102,255,.1);
-
+.repeat-details {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #4b5563;
 }
-
-
-/* =========================================================
-   FILTERS
-   ========================================================= */
 
-.filters{
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(180px,1fr)
-        );
-
-    gap:10px;
-
-    margin-bottom:15px;
-
+button.action {
+    background: var(--navy);
+    color: white;
+    border: 0;
+    padding: 9px 14px;
+    border-radius: 6px;
+    cursor: pointer;
 }
-
-select{
 
-    width:100%;
-
-    padding:10px;
-
-    border:
-        1px solid var(--border);
-
-    border-radius:8px;
-
-    background:white;
-
+button.action:hover {
+    background: var(--blue);
 }
-
 
-/* =========================================================
-   EMPTY
-   ========================================================= */
-
-.empty{
-
-    padding:30px;
-
-    text-align:center;
-
-    color:var(--muted);
-
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
 }
-
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
-.footer{
-
-    text-align:center;
-
-    color:#7b8490;
-
-    font-size:12px;
-
-    margin-top:30px;
-
-    padding:15px;
-
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
-
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media(max-width:900px){
-
-    .grid-2{
-
-        grid-template-columns:1fr;
 
+@media (max-width: 800px) {
+    .kpi-grid,
+    .chart-grid,
+    .filters {
+        grid-template-columns: 1fr;
     }
 
+    .chart-card.full {
+        grid-column: auto;
+    }
+
+    .container {
+        width: calc(100% - 18px);
+    }
+
+    header {
+        padding: 18px;
+    }
 }
-
-@media(max-width:650px){
-
-    body{
-
-        padding:10px;
-
-    }
-
-    .header h1{
-
-        font-size:22px;
-
-    }
-
-    .controls{
-
-        flex-direction:column;
-
-        align-items:stretch;
-
-    }
-
-    button{
-
-        width:100%;
-
-    }
-
-    .bar-row{
-
-        grid-template-columns:
-            85px
-            1fr
-            45px;
-
-    }
-
-    th,
-    td{
-
-        font-size:11px;
-
-        padding:8px;
-
-    }
-
-}
-
 </style>
-
 </head>
-
 
 <body>
 
-
-<!-- =========================================================
-     HEADER
-     ========================================================= -->
-
-<header class="header">
-
-    <h1>
-        📊 Productivity Operations Dashboard
-    </h1>
-
-    <p>
-        Productividad, actividad operacional,
-        modificaciones y trazabilidad de casos.
-    </p>
-
+<header>
+    <div class="header-content">
+        <h1>📊 Productivity Operations Dashboard</h1>
+        <p>Análisis de productividad, actividades, registros e incongruencias operativas</p>
+    </div>
 </header>
 
+<main class="container">
 
-<!-- =========================================================
-     CONTROLES
-     ========================================================= -->
-
-<div class="controls">
-
-    <div class="file-area">
+    <section class="upload-box">
+        <h2>📁 Cargar base de actividades</h2>
+        <p>
+            Carga el archivo Excel que se genera durante la operación.
+            El procesamiento se realiza directamente en este navegador.
+        </p>
 
         <input
             type="file"
             id="fileInput"
-            accept=".csv,.xlsx,.xls">
+            accept=".xlsx,.xls,.csv"
+        >
+
+        <div id="status" class="status"></div>
+    </section>
+
+    <div class="tabs">
+
+        <button class="tab-button active" data-tab="dashboard">
+            📊 Dashboard gerencial
+        </button>
+
+        <button class="tab-button" data-tab="daily">
+            📅 Productividad diaria
+        </button>
+
+        <button class="tab-button" data-tab="monthly">
+            🗓️ Productividad mensual
+        </button>
+
+        <button class="tab-button" data-tab="yearly">
+            📆 Productividad anual
+        </button>
+
+        <button class="tab-button" data-tab="inconsistencies">
+            ⚠️ Incongruencias
+        </button>
+
+        <button class="tab-button" data-tab="detail">
+            📋 Detalle de actividades
+        </button>
 
     </div>
 
-    <button
-        id="btnAnalizar"
-        onclick="processFile()">
-
-        📂 Cargar y analizar
-
-    </button>
-
-    <button
-        id="btnActualizar"
-        class="btn-secondary"
-        onclick="renderAll()"
-        disabled>
-
-        🔄 Actualizar
-
-    </button>
-
-    <button
-        id="btnExportar"
-        class="btn-purple"
-        onclick="exportResults()"
-        disabled>
-
-        📥 Exportar análisis
-
-    </button>
-
-</div>
-
-
-<div id="status"></div>
-
-<div id="lastUpdate"></div>
-
-<div
-    id="fileInfo"
-    class="file-info">
-</div>
-
-
-<!-- =========================================================
-     KPIs
-     ========================================================= -->
-
-<div class="cards">
-
-
-    <div class="card">
-
-        <h3>
-            Actividades registradas
-        </h3>
-
-        <div
-            id="kpiActividades"
-            class="value">
-
-            0
-
-        </div>
-
-    </div>
-
-
-    <div class="card green">
-
-        <h3>
-            Casos únicos
-        </h3>
-
-        <div
-            id="kpiCasos"
-            class="value">
-
-            0
-
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Agentes activos
-        </h3>
-
-        <div
-            id="kpiAgentes"
-            class="value">
-
-            0
-
-        </div>
-
-    </div>
-
-
-    <div class="card yellow">
-
-        <h3>
-            Promedio actividades / caso
-        </h3>
-
-        <div
-            id="kpiPromedioCaso"
-            class="value">
-
-            0
-
-        </div>
-
-    </div>
-
-
-    <div class="card red">
-
-        <h3>
-            Casos repetidos
-        </h3>
-
-        <div
-            id="kpiRepetidos"
-            class="value">
-
-            0
-
-        </div>
-
-    </div>
-
-
-    <div class="card purple">
-
-        <h3>
-            % casos repetidos
-        </h3>
-
-        <div
-            id="kpiPctRepetidos"
-            class="value">
-
-            0%
-
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Tiempo promedio de ciclo
-        </h3>
-
-        <div
-            id="kpiTiempoPromedio"
-            class="value">
-
-            0h
-
-        </div>
-
-    </div>
-
-
-    <div class="card green">
-
-        <h3>
-            Casos con registro horario
-        </h3>
-
-        <div
-            id="kpiConFecha"
-            class="value">
-
-            0%
-
-        </div>
-
-    </div>
-
-
-</div>
-
-
-<!-- =========================================================
-     PRODUCTIVIDAD POR AGENTE
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="section-header">
-
-        <h2>
-            👥 Productividad por agente
-        </h2>
-
-    </div>
-
-
-    <div class="table-wrap">
-
-        <table id="agentTable">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Agente
-                    </th>
-
-                    <th>
-                        Actividades
-                    </th>
-
-                    <th>
-                        Casos únicos
-                    </th>
-
-                    <th>
-                        Casos repetidos
-                    </th>
-
-                    <th>
-                        Modificaciones
-                    </th>
-
-                    <th>
-                        Tiempo promedio
-                    </th>
-
-                    <th>
-                        Gestión principal
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody></tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     DISTRIBUCIONES
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="grid-2">
-
-
-        <div class="panel">
-
-            <h3>
-                🛠️ Tipo de gestión
-            </h3>
-
-            <div
-                id="gestionChart"
-                class="chart">
+    <!-- DASHBOARD -->
+
+    <section id="dashboard" class="tab active">
+
+        <h2 class="section-title">Resumen gerencial</h2>
+
+        <div class="kpi-grid">
+
+            <div class="kpi">
+                <div class="label">Registros</div>
+                <div class="value" id="kpiRecords">0</div>
+                <div class="sub">Filas procesadas</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Casos únicos</div>
+                <div class="value" id="kpiCases">0</div>
+                <div class="sub">Casos diferentes</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Agentes</div>
+                <div class="value" id="kpiAgents">0</div>
+                <div class="sub">Agentes con actividad</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Repeticiones</div>
+                <div class="value" id="kpiRepeated">0</div>
+                <div class="sub">Registros de casos repetidos</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Casos repetidos</div>
+                <div class="value" id="kpiRepeatedCases">0</div>
+                <div class="sub">Agente + caso</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Productividad promedio</div>
+                <div class="value" id="kpiAverage">0</div>
+                <div class="sub">Casos por agente/día</div>
             </div>
 
         </div>
 
+        <div class="chart-grid">
 
-        <div class="panel">
+            <div class="chart-card">
+                <h3>Productividad por día</h3>
+                <div class="chart-container">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
 
-            <h3>
-                📁 Tipo de caso
-            </h3>
+            <div class="chart-card">
+                <h3>Productividad por mes</h3>
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
 
-            <div
-                id="tipoCasoChart"
-                class="chart">
+            <div class="chart-card">
+                <h3>Productividad por año</h3>
+                <div class="chart-container">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Registros por agente</h3>
+                <div class="chart-container">
+                    <canvas id="agentChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card full">
+                <h3>Distribución de estados</h3>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
             </div>
 
         </div>
 
+    </section>
 
-    </div>
+    <!-- DAILY -->
 
-</div>
+    <section id="daily" class="tab">
 
+        <h2 class="section-title">Productividad diaria</h2>
 
-<!-- =========================================================
-     ESTADO + HORA
-     ========================================================= -->
+        <p class="summary-note">
+            Productividad calculada a partir de casos únicos registrados por día.
+        </p>
 
-<div class="section">
+        <div class="chart-card">
+            <div class="chart-container">
+                <canvas id="dailyDetailedChart"></canvas>
+            </div>
+        </div>
 
-    <div class="grid-2">
+        <br>
 
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Registros</th>
+                        <th>Casos únicos</th>
+                        <th>Agentes</th>
+                        <th>Repeticiones</th>
+                    </tr>
+                </thead>
+                <tbody id="dailyTable"></tbody>
+            </table>
+        </div>
 
-        <div class="panel">
+    </section>
 
-            <h3>
-                📌 Estado del caso
-            </h3>
+    <!-- MONTHLY -->
 
-            <div
-                id="estadoChart"
-                class="chart">
+    <section id="monthly" class="tab">
+
+        <h2 class="section-title">Productividad mensual</h2>
+
+        <p class="summary-note">
+            Consolidado mensual de la operación.
+        </p>
+
+        <div class="chart-card">
+            <div class="chart-container">
+                <canvas id="monthlyDetailedChart"></canvas>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th>Registros</th>
+                        <th>Casos únicos</th>
+                        <th>Agentes</th>
+                        <th>Repeticiones</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyTable"></tbody>
+            </table>
+        </div>
+
+    </section>
+
+    <!-- YEARLY -->
+
+    <section id="yearly" class="tab">
+
+        <h2 class="section-title">Productividad anual</h2>
+
+        <p class="summary-note">
+            Consolidado anual de la operación.
+        </p>
+
+        <div class="chart-card">
+            <div class="chart-container">
+                <canvas id="yearlyDetailedChart"></canvas>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Año</th>
+                        <th>Registros</th>
+                        <th>Casos únicos</th>
+                        <th>Agentes</th>
+                        <th>Repeticiones</th>
+                    </tr>
+                </thead>
+                <tbody id="yearlyTable"></tbody>
+            </table>
+        </div>
+
+    </section>
+
+    <!-- INCONSISTENCIES -->
+
+    <section id="inconsistencies" class="tab">
+
+        <h2 class="section-title">⚠️ Incongruencias de registro</h2>
+
+        <p class="summary-note">
+            Se considera una repetición cuando el mismo agente registra el mismo
+            caso más de una vez en la base.
+        </p>
+
+        <div class="kpi-grid">
+
+            <div class="kpi">
+                <div class="label">Casos repetidos</div>
+                <div class="value" id="incCases">0</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Registros involucrados</div>
+                <div class="value" id="incRecords">0</div>
+            </div>
+
+            <div class="kpi">
+                <div class="label">Agentes involucrados</div>
+                <div class="value" id="incAgents">0</div>
             </div>
 
         </div>
 
-
-        <div class="panel">
-
-            <h3>
-                🕐 Actividades por hora de registro
-            </h3>
-
-            <div
-                id="horaChart"
-                class="chart">
-            </div>
-
-        </div>
-
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     CASOS REPETIDOS
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="section-header">
-
-        <h2>
-            🔁 Casos con múltiples modificaciones
-        </h2>
-
-    </div>
-
-
-    <div class="panel">
-
+        <br>
 
         <div class="filters">
 
+            <input
+                type="text"
+                id="incSearch"
+                placeholder="Buscar caso o agente..."
+            >
 
-            <select
-                id="repeatAgentFilter">
-
-                <option value="">
-                    Todos los agentes
-                </option>
-
+            <select id="incAgentFilter">
+                <option value="">Todos los agentes</option>
             </select>
 
-
-            <select
-                id="repeatMinFilter">
-
-                <option value="2">
-                    2+ modificaciones
-                </option>
-
-                <option value="3">
-                    3+ modificaciones
-                </option>
-
-                <option value="4">
-                    4+ modificaciones
-                </option>
-
-                <option value="5">
-                    5+ modificaciones
-                </option>
-
+            <select id="incMinRepeat">
+                <option value="2">2 o más registros</option>
+                <option value="3">3 o más registros</option>
+                <option value="4">4 o más registros</option>
+                <option value="5">5 o más registros</option>
             </select>
 
+            <button class="action" id="clearIncFilters">
+                Limpiar filtros
+            </button>
 
         </div>
 
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Caso</th>
+                        <th>Agente</th>
+                        <th>Veces registrado</th>
+                        <th>Primera fecha/hora</th>
+                        <th>Última fecha/hora</th>
+                        <th>Gestiones / cambios</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody id="incTable"></tbody>
+            </table>
+        </div>
 
-        <div
-            id="repeatSummary">
+    </section>
 
-            <div class="empty">
+    <!-- DETAIL -->
 
-                Carga una base para
-                visualizar los casos repetidos.
+    <section id="detail" class="tab">
 
-            </div>
+        <h2 class="section-title">📋 Detalle de actividades</h2>
+
+        <div class="filters">
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Buscar caso, agente, correo, gestión, estado o tipo de caso..."
+            >
+
+            <select id="agentFilter">
+                <option value="">Todos los agentes</option>
+            </select>
+
+            <select id="managementFilter">
+                <option value="">Todos los tipos de gestión</option>
+            </select>
+
+            <select id="statusFilter">
+                <option value="">Todos los estados</option>
+            </select>
 
         </div>
 
+        <div class="table-wrapper">
 
-    </div>
+            <table>
 
-</div>
+                <thead>
+                    <tr>
+                        <th>Caso</th>
+                        <th>Tipo de caso</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Fecha/hora registro</th>
+                        <th>Agente</th>
+                        <th>Gestión</th>
+                        <th>Repetición</th>
+                    </tr>
+                </thead>
 
+                <tbody id="detailTable"></tbody>
 
-<!-- =========================================================
-     PARTICIPACIÓN DE AGENTES
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="section-header">
-
-        <h2>
-            👤 Quién modifica los casos repetidos
-        </h2>
-
-    </div>
-
-
-    <div class="table-wrap">
-
-        <table id="repeatAgentTable">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Agente
-                    </th>
-
-                    <th>
-                        Casos repetidos
-                    </th>
-
-                    <th>
-                        Modificaciones
-                    </th>
-
-                    <th>
-                        Tratamiento
-                    </th>
-
-                    <th>
-                        Actualización
-                    </th>
-
-                    <th>
-                        No requiere respuesta
-                    </th>
-
-                    <th>
-                        Otros
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody></tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     DISTRIBUCIÓN
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="grid-2">
-
-
-        <div class="panel">
-
-            <h3>
-                🔢 Distribución de modificaciones
-            </h3>
-
-            <div
-                id="repeatDistribution"
-                class="chart">
-            </div>
+            </table>
 
         </div>
 
+    </section>
 
-        <div class="panel">
-
-            <h3>
-                ⚠️ Casos con más modificaciones
-            </h3>
-
-            <div class="table-wrap">
-
-                <table id="topRepeatedTable">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Caso
-                            </th>
-
-                            <th>
-                                Modificaciones
-                            </th>
-
-                            <th>
-                                Agentes
-                            </th>
-
-                            <th>
-                                Tiempo total
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody></tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     DETALLE
-     ========================================================= -->
-
-<div class="section">
-
-    <div class="section-header">
-
-        <h2>
-            📋 Detalle de actividades
-        </h2>
-
-    </div>
-
-
-    <input
-        id="searchInput"
-        class="search"
-        type="search"
-        placeholder="Buscar caso, agente, correo, gestión, estado o tipo de caso...">
-
-
-    <div class="filters">
-
-
-        <select id="agentFilter">
-
-            <option value="">
-                Todos los agentes
-            </option>
-
-        </select>
-
-
-        <select id="gestionFilter">
-
-            <option value="">
-                Todos los tipos de gestión
-            </option>
-
-        </select>
-
-
-        <select id="statusFilter">
-
-            <option value="">
-                Todos los estados
-            </option>
-
-        </select>
-
-
-        <select id="typeFilter">
-
-            <option value="">
-                Todos los tipos de caso
-            </option>
-
-        </select>
-
-
-    </div>
-
-
-    <div class="table-wrap">
-
-        <table id="activityTable">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Caso
-                    </th>
-
-                    <th>
-                        Tipo de caso
-                    </th>
-
-                    <th>
-                        Estado
-                    </th>
-
-                    <th>
-                        Fecha
-                    </th>
-
-                    <th>
-                        Hora
-                    </th>
-
-                    <th>
-                        Fecha/hora registro
-                    </th>
-
-                    <th>
-                        Agente
-                    </th>
-
-                    <th>
-                        Correo
-                    </th>
-
-                    <th>
-                        Tipo de gestión
-                    </th>
-
-                    <th>
-                        Modificaciones caso
-                    </th>
-
-                </tr>
-
-            </thead>
-
-            <tbody></tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     FOOTER
-     ========================================================= -->
-
-<footer class="footer">
-
-    Productivity Operations Dashboard
-    ·
-    Procesamiento local
-    ·
-    GitHub Pages
-
-</footer>
-
+</main>
 
 <script>
 
-/* =========================================================
+"use strict";
+
+/* ============================================================
    VARIABLES GLOBALES
-   ========================================================= */
+============================================================ */
 
-let actividades = [];
+let rawRows = [];
+let processedRows = [];
+let charts = {};
 
-let casosMap = {};
+const columnAliases = {
 
-let autoRefreshTimer = null;
+    caseNumber: [
+        "numerodecaso",
+        "numero de caso",
+        "número de caso",
+        "caso",
+        "case",
+        "caseid",
+        "idcaso"
+    ],
+
+    type: [
+        "tipodecaso",
+        "tipo de caso",
+        "tipo",
+        "tipocaso"
+    ],
+
+    status: [
+        "estado",
+        "status",
+        "estatus"
+    ],
+
+    date: [
+        "fecha",
+        "date",
+        "fecharegistro"
+    ],
+
+    time: [
+        "hora",
+        "time"
+    ],
+
+    dateTime: [
+        "fechahoraregistro",
+        "fecha hora registro",
+        "fecha/hora registro",
+        "fecha hora",
+        "fechahora",
+        "datetime",
+        "timestamp"
+    ],
+
+    agent: [
+        "agente",
+        "agent",
+        "nombre agente",
+        "nombre del agente",
+        "usuario",
+        "owner",
+        "propietario"
+    ],
+
+    management: [
+        "gestion",
+        "gestión",
+        "tipo de gestion",
+        "tipo de gestión",
+        "actividad",
+        "accion",
+        "acción",
+        "modificacion",
+        "modificación"
+    ],
+
+    email: [
+        "correo",
+        "email",
+        "correo electronico",
+        "correo electrónico"
+    ]
+
+};
 
 
-/* =========================================================
-   NORMALIZAR TEXTO
-   ========================================================= */
+/* ============================================================
+   NORMALIZACIÓN
+============================================================ */
 
-function norm(value){
+function normalizeText(value) {
 
-    if(
-        value === null ||
-        value === undefined
-    ){
-
+    if (value === null || value === undefined) {
         return "";
-
     }
 
     return String(value)
-
         .normalize("NFD")
-
-        .replace(
-            /[\u0300-\u036f]/g,
-            ""
-        )
-
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
         .toLowerCase()
-
-        .trim();
-
-}
-
-
-/* =========================================================
-   ESCAPAR HTML
-   ========================================================= */
-
-function escapeHtml(value){
-
-    return String(
-        value ?? ""
-    )
-
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-
-    .replace(
-        /</g,
-        "&lt;"
-    )
-
-    .replace(
-        />/g,
-        "&gt;"
-    )
-
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-
-    .replace(
-        /'/g,
-        "&#039;"
-    );
+        .replace(/\s+/g, " ");
 
 }
 
 
-/* =========================================================
-   CONVERTIR FECHA/HORA DE EXCEL
-   =========================================================
+function normalizeHeader(value) {
 
-   Excel guarda DateTime como:
+    return normalizeText(value)
+        .replace(/[\/_-]/g, " ")
+        .replace(/\s+/g, "");
 
-   número entero = días desde el origen
-   decimal       = fracción del día
-
-   Ejemplo:
-
-   46289
-   +
-   0.7982407407407408
-
-   corresponde a:
-
-   24/09/2026 19:09:28
-
-   Esta función NO muestra el serial.
-   Lo convierte a Date.
-   ========================================================= */
-
-function parseExcelDateTime(value){
-
-    if(
-        value === null ||
-        value === undefined ||
-        value === ""
-    ){
-
-        return null;
-
-    }
+}
 
 
-    /*
-     * SheetJS puede entregar un objeto Date
-     */
+function findColumn(headers, aliases) {
 
-    if(
-        value instanceof Date &&
-        !isNaN(value.getTime())
-    ){
+    const normalizedHeaders = headers.map(h => ({
+        original: h,
+        normalized: normalizeHeader(h)
+    }));
 
-        return value;
+    for (const alias of aliases) {
 
-    }
+        const normalizedAlias = normalizeHeader(alias);
 
+        const exact = normalizedHeaders.find(
+            h => h.normalized === normalizedAlias
+        );
 
-    /*
-     * Excel serial
-     */
-
-    if(
-        typeof value === "number" &&
-        isFinite(value)
-    ){
-
-        const parsed =
-            XLSX.SSF.parse_date_code(
-                value
-            );
-
-
-        if(!parsed){
-
-            return null;
-
+        if (exact) {
+            return exact.original;
         }
-
-
-        return new Date(
-            parsed.y,
-            parsed.m - 1,
-            parsed.d,
-            parsed.H || 0,
-            parsed.M || 0,
-            Math.floor(
-                parsed.S || 0
-            )
-        );
-
     }
 
+    for (const alias of aliases) {
 
-    /*
-     * Si viene como texto.
-     */
+        const normalizedAlias = normalizeHeader(alias);
 
-    const text =
-        String(value)
-        .trim();
-
-
-    /*
-     * DD/MM/YYYY HH:MM:SS
-     */
-
-    let match =
-        text.match(
-            /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+        const partial = normalizedHeaders.find(
+            h =>
+                h.normalized.includes(normalizedAlias) ||
+                normalizedAlias.includes(h.normalized)
         );
 
-
-    if(match){
-
-        return new Date(
-
-            Number(match[3]),
-
-            Number(match[2]) - 1,
-
-            Number(match[1]),
-
-            Number(match[4]),
-
-            Number(match[5]),
-
-            Number(match[6] || 0)
-
-        );
-
-    }
-
-
-    /*
-     * DD/MM/YYYY HH:MM AM/PM
-     */
-
-    match =
-        text.match(
-            /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)$/i
-        );
-
-
-    if(match){
-
-        let hour =
-            Number(match[4]);
-
-
-        const minute =
-            Number(match[5]);
-
-
-        const second =
-            Number(
-                match[6] || 0
-            );
-
-
-        const ampm =
-            match[7]
-            .toUpperCase();
-
-
-        if(
-            ampm === "PM" &&
-            hour !== 12
-        ){
-
-            hour += 12;
-
+        if (partial) {
+            return partial.original;
         }
-
-
-        if(
-            ampm === "AM" &&
-            hour === 12
-        ){
-
-            hour = 0;
-
-        }
-
-
-        return new Date(
-
-            Number(match[3]),
-
-            Number(match[2]) - 1,
-
-            Number(match[1]),
-
-            hour,
-
-            minute,
-
-            second
-
-        );
-
     }
-
-
-    /*
-     * Intento estándar.
-     */
-
-    const standard =
-        new Date(text);
-
-
-    if(
-        !isNaN(
-            standard.getTime()
-        )
-    ){
-
-        return standard;
-
-    }
-
 
     return null;
-
 }
 
 
-/* =========================================================
-   FORMATEAR FECHA/HORA
-   ========================================================= */
+/* ============================================================
+   FECHAS
+============================================================ */
 
-function formatDateTime(value){
+function excelSerialToDate(serial) {
 
-    const date =
-        value instanceof Date
-        ? value
-        : parseExcelDateTime(value);
-
-
-    if(!date){
-
-        return "Sin registro";
-
-    }
-
-
-    const day =
-        String(
-            date.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const year =
-        date.getFullYear();
-
-
-    const hours =
-        String(
-            date.getHours()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const minutes =
-        String(
-            date.getMinutes()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const seconds =
-        String(
-            date.getSeconds()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return (
-        day +
-        "/" +
-        month +
-        "/" +
-        year +
-        " " +
-        hours +
-        ":" +
-        minutes +
-        ":" +
-        seconds
-    );
-
-}
-
-
-/* =========================================================
-   OBTENER TIMESTAMP
-   ========================================================= */
-
-function getTimestamp(value){
-
-    const date =
-        value instanceof Date
-        ? value
-        : parseExcelDateTime(value);
-
-
-    if(!date){
-
+    if (typeof serial !== "number" || !isFinite(serial)) {
         return null;
-
     }
 
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
 
-    return date.getTime();
-
+    return new Date(
+        excelEpoch.getTime() + serial * 86400000
+    );
 }
 
 
-/* =========================================================
-   FORMATEAR DURACIÓN
-   ========================================================= */
+function parseDateValue(value) {
 
-function formatDuration(milliseconds){
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
 
-    if(
-        milliseconds === null ||
-        milliseconds === undefined ||
-        !isFinite(milliseconds)
-    ){
+    if (value instanceof Date) {
 
-        return "Sin dato";
+        return isNaN(value.getTime())
+            ? null
+            : new Date(value.getTime());
 
     }
 
+    if (typeof value === "number") {
 
-    if(milliseconds < 0){
-
-        return "0 min";
+        return excelSerialToDate(value);
 
     }
 
+    const text = String(value).trim();
 
-    const totalMinutes =
-        Math.floor(
-            milliseconds /
-            60000
+    if (!text) {
+        return null;
+    }
+
+    /* Excel serial escrito como texto */
+
+    if (/^\d+(\.\d+)?$/.test(text)) {
+
+        const numeric = Number(text);
+
+        if (numeric > 1 && numeric < 100000) {
+            return excelSerialToDate(numeric);
+        }
+    }
+
+    /* dd/mm/yyyy hh:mm:ss */
+
+    let match = text.match(
+        /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+    );
+
+    if (match) {
+
+        let day = Number(match[1]);
+        let month = Number(match[2]) - 1;
+        let year = Number(match[3]);
+
+        if (year < 100) {
+            year += 2000;
+        }
+
+        return new Date(
+            year,
+            month,
+            day,
+            Number(match[4] || 0),
+            Number(match[5] || 0),
+            Number(match[6] || 0)
+        );
+    }
+
+    /* yyyy-mm-dd */
+
+    const parsed = new Date(text);
+
+    if (!isNaN(parsed.getTime())) {
+        return parsed;
+    }
+
+    return null;
+}
+
+
+function parseTimeValue(value) {
+
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
+
+    if (typeof value === "number") {
+
+        const totalSeconds = Math.round(
+            (value % 1) * 86400
         );
 
+        return totalSeconds;
+    }
 
-    const days =
-        Math.floor(
-            totalMinutes /
-            1440
-        );
+    const text = String(value).trim();
 
+    /* Decimal Excel */
 
-    const hours =
-        Math.floor(
-            (
-                totalMinutes %
-                1440
-            ) / 60
-        );
+    if (/^\d+(\.\d+)?$/.test(text)) {
 
+        const number = Number(text);
 
-    const minutes =
-        totalMinutes % 60;
+        if (number >= 0 && number < 1) {
 
+            return Math.round(
+                number * 86400
+            );
 
-    if(days > 0){
+        }
+    }
+
+    const match = text.match(
+        /^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/
+    );
+
+    if (match) {
 
         return (
-            days +
-            "d " +
-            hours +
-            "h " +
-            minutes +
-            "m"
+            Number(match[1]) * 3600 +
+            Number(match[2]) * 60 +
+            Number(match[3] || 0)
         );
-
     }
 
-
-    if(hours > 0){
-
-        return (
-            hours +
-            "h " +
-            minutes +
-            "m"
-        );
-
-    }
-
-
-    return (
-        minutes +
-        "m"
-    );
-
+    return null;
 }
 
 
-/* =========================================================
-   FORMATO CORTO DE DURACIÓN
-   ========================================================= */
+function combineDateAndTime(dateValue, timeValue) {
 
-function formatDurationDecimal(
-    milliseconds
-){
+    const date = parseDateValue(dateValue);
 
-    if(
-        milliseconds === null ||
-        !isFinite(milliseconds)
-    ){
-
-        return "Sin dato";
-
+    if (!date) {
+        return null;
     }
 
+    const seconds = parseTimeValue(timeValue);
 
-    const hours =
-        milliseconds /
-        3600000;
-
-
-    if(hours < 1){
-
-        return (
-            Math.round(
-                hours * 60
-            ) +
-            " min"
-        );
-
+    if (seconds === null) {
+        return date;
     }
 
+    const result = new Date(date.getTime());
 
-    return (
-        hours.toFixed(2) +
-        " h"
+    result.setHours(
+        Math.floor(seconds / 3600),
+        Math.floor((seconds % 3600) / 60),
+        seconds % 60,
+        0
     );
-
-}
-
-
-/* =========================================================
-   DETECTAR COLUMNAS
-   ========================================================= */
-
-function detectarColumnas(headers){
-
-    const cols = {};
-
-
-    headers.forEach(
-        (
-            header,
-            index
-        )=>{
-
-            const h =
-                norm(header);
-
-
-            if(
-                h === "numerodecaso" ||
-                h === "numero de caso" ||
-                h === "numero del caso" ||
-                h === "case number"
-            ){
-
-                if(
-                    cols.caso === undefined
-                ){
-
-                    cols.caso =
-                        index;
-
-                }
-
-            }
-
-
-            else if(
-                h === "tipocaso" ||
-                h === "tipo caso"
-            ){
-
-                cols.tipoCaso =
-                    index;
-
-            }
-
-
-            else if(
-                h === "estadocaso" ||
-                h === "estado caso"
-            ){
-
-                cols.estado =
-                    index;
-
-            }
-
-
-            else if(
-                h === "fecha"
-            ){
-
-                cols.fecha =
-                    index;
-
-            }
-
-
-            else if(
-                h === "hora"
-            ){
-
-                cols.hora =
-                    index;
-
-            }
-
-
-            else if(
-                h === "correo" ||
-                h === "email"
-            ){
-
-                cols.correo =
-                    index;
-
-            }
-
-
-            else if(
-                h === "usuario" ||
-                h === "agente"
-            ){
-
-                cols.usuario =
-                    index;
-
-            }
-
-
-            else if(
-                h === "fechahoraregistro" ||
-                h === "fecha hora registro" ||
-                h === "fecha/hora registro" ||
-                h === "fecha y hora registro"
-            ){
-
-                cols.fechaHoraRegistro =
-                    index;
-
-            }
-
-
-            else if(
-                h === "tipogestion" ||
-                h === "tipo gestion"
-            ){
-
-                cols.tipoGestion =
-                    index;
-
-            }
-
-        }
-    );
-
-
-    return cols;
-
-}
-
-
-/* =========================================================
-   PROCESAR ARCHIVO
-   ========================================================= */
-
-function processFile(){
-
-    const file =
-        document
-        .getElementById(
-            "fileInput"
-        )
-        .files[0];
-
-
-    if(!file){
-
-        setStatus(
-            "Selecciona un archivo primero.",
-            "err-msg"
-        );
-
-        return;
-
-    }
-
-
-    setStatus(
-        "⏳ Procesando archivo...",
-        "info-msg"
-    );
-
-
-    document
-        .getElementById(
-            "btnAnalizar"
-        )
-        .disabled = true;
-
-
-    const reader =
-        new FileReader();
-
-
-    reader.onload =
-        function(event){
-
-            try{
-
-                const data =
-                    new Uint8Array(
-                        event.target.result
-                    );
-
-
-                let workbook;
-
-
-                /*
-                 * CSV
-                 */
-
-                if(
-                    file.name
-                    .toLowerCase()
-                    .endsWith(".csv")
-                ){
-
-                    const text =
-                        new TextDecoder(
-                            "utf-8"
-                        ).decode(
-                            data
-                        );
-
-
-                    workbook =
-                        XLSX.read(
-                            text,
-                            {
-                                type:"string",
-                                cellDates:false
-                            }
-                        );
-
-                }
-
-
-                /*
-                 * Excel
-                 */
-
-                else{
-
-                    workbook =
-                        XLSX.read(
-                            data,
-                            {
-                                type:"array",
-                                cellDates:false
-                            }
-                        );
-
-                }
-
-
-                if(
-                    !workbook.SheetNames.length
-                ){
-
-                    throw new Error(
-                        "El archivo no contiene hojas."
-                    );
-
-                }
-
-
-                const sheet =
-                    workbook.Sheets[
-                        workbook.SheetNames[0]
-                    ];
-
-
-                const matrix =
-                    XLSX.utils.sheet_to_json(
-                        sheet,
-                        {
-                            header:1,
-                            defval:"",
-                            raw:true
-                        }
-                    );
-
-
-                if(
-                    matrix.length < 2
-                ){
-
-                    throw new Error(
-                        "El archivo no contiene suficientes datos."
-                    );
-
-                }
-
-
-                analizarBase(
-                    matrix,
-                    file
-                );
-
-            }
-
-            catch(error){
-
-                console.error(
-                    error
-                );
-
-
-                setStatus(
-                    "❌ Error procesando el archivo: " +
-                    error.message,
-                    "err-msg"
-                );
-
-            }
-
-            finally{
-
-                document
-                    .getElementById(
-                        "btnAnalizar"
-                    )
-                    .disabled = false;
-
-            }
-
-        };
-
-
-    reader.onerror =
-        function(){
-
-            setStatus(
-                "❌ No fue posible leer el archivo.",
-                "err-msg"
-            );
-
-
-            document
-                .getElementById(
-                    "btnAnalizar"
-                )
-                .disabled = false;
-
-        };
-
-
-    reader.readAsArrayBuffer(
-        file
-    );
-
-}
-
-
-/* =========================================================
-   ANALIZAR BASE
-   ========================================================= */
-
-function analizarBase(
-    matrix,
-    file
-){
-
-    const headers =
-        matrix[0];
-
-
-    const cols =
-        detectarColumnas(
-            headers
-        );
-
-
-    if(
-        cols.caso === undefined
-    ){
-
-        throw new Error(
-            "No se encontró la columna NumerodeCaso / Número del caso."
-        );
-
-    }
-
-
-    if(
-        cols.fechaHoraRegistro === undefined
-    ){
-
-        throw new Error(
-            "No se encontró la columna FechaHoraRegistro. Esta columna es necesaria para calcular correctamente cuándo se registró cada modificación."
-        );
-
-    }
-
-
-    actividades = [];
-
-
-    for(
-        let i = 1;
-        i < matrix.length;
-        i++
-    ){
-
-        const row =
-            matrix[i] || [];
-
-
-        const caso =
-            String(
-                row[
-                    cols.caso
-                ] ?? ""
-            )
-            .trim();
-
-
-        if(!caso){
-
-            continue;
-
-        }
-
-
-        const rawFechaRegistro =
-            row[
-                cols.fechaHoraRegistro
-            ];
-
-
-        const fechaRegistro =
-            parseExcelDateTime(
-                rawFechaRegistro
-            );
-
-
-        const actividad = {
-
-            index:i,
-
-            caso:caso,
-
-            tipoCaso:
-                cols.tipoCaso !== undefined
-                ? String(
-                    row[
-                        cols.tipoCaso
-                    ] ?? ""
-                  ).trim()
-                : "",
-
-            estado:
-                cols.estado !== undefined
-                ? String(
-                    row[
-                        cols.estado
-                    ] ?? ""
-                  ).trim()
-                : "",
-
-            fecha:
-                cols.fecha !== undefined
-                ? row[
-                    cols.fecha
-                  ]
-                : "",
-
-            hora:
-                cols.hora !== undefined
-                ? row[
-                    cols.hora
-                  ]
-                : "",
-
-            correo:
-                cols.correo !== undefined
-                ? String(
-                    row[
-                        cols.correo
-                    ] ?? ""
-                  ).trim()
-                : "",
-
-            usuario:
-                cols.usuario !== undefined
-                ? String(
-                    row[
-                        cols.usuario
-                    ] ?? ""
-                  ).trim()
-                : "Sin usuario",
-
-            fechaHoraRegistro:
-                rawFechaRegistro,
-
-            fechaRegistroDate:
-                fechaRegistro,
-
-            tipoGestion:
-                cols.tipoGestion !== undefined
-                ? String(
-                    row[
-                        cols.tipoGestion
-                    ] ?? ""
-                  ).trim()
-                : "Sin especificar"
-
-        };
-
-
-        actividades.push(
-            actividad
-        );
-
-    }
-
-
-    if(
-        !actividades.length
-    ){
-
-        throw new Error(
-            "No se encontraron registros válidos."
-        );
-
-    }
-
-
-    construirCasos();
-
-
-    llenarFiltros();
-
-
-    renderAll();
-
-
-    document
-        .getElementById(
-            "btnActualizar"
-        )
-        .disabled = false;
-
-
-    document
-        .getElementById(
-            "btnExportar"
-        )
-        .disabled = false;
-
-
-    iniciarAutoRefresh();
-
-
-    const repetidos =
-        Object.values(
-            casosMap
-        )
-        .filter(
-            c =>
-                c.actividades.length > 1
-        )
-        .length;
-
-
-    const conFecha =
-        actividades.filter(
-            a =>
-                a.fechaRegistroDate
-        ).length;
-
-
-    setStatus(
-
-        "✅ Base procesada: " +
-
-        actividades.length +
-
-        " actividades, " +
-
-        Object.keys(
-            casosMap
-        ).length +
-
-        " casos únicos, " +
-
-        repetidos +
-
-        " casos repetidos.",
-
-        "ok-msg"
-
-    );
-
-
-    mostrarInfoArchivo(
-        file,
-        conFecha
-    );
-
-}
-
-
-/* =========================================================
-   CONSTRUIR CASOS
-   ========================================================= */
-
-function construirCasos(){
-
-    casosMap = {};
-
-
-    actividades.forEach(
-        actividad=>{
-
-            if(
-                !casosMap[
-                    actividad.caso
-                ]
-            ){
-
-                casosMap[
-                    actividad.caso
-                ] = {
-
-                    caso:
-                        actividad.caso,
-
-                    actividades:[]
-
-                };
-
-            }
-
-
-            casosMap[
-                actividad.caso
-            ]
-            .actividades
-            .push(
-                actividad
-            );
-
-        }
-    );
-
-
-    Object.values(
-        casosMap
-    )
-    .forEach(
-        caso=>{
-
-            caso.actividades.sort(
-                compararFechaActividad
-            );
-
-            calcularDatosCaso(
-                caso
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ORDENAR POR FechaHoraRegistro
-   ========================================================= */
-
-function compararFechaActividad(
-    a,
-    b
-){
-
-    const fechaA =
-        getTimestamp(
-            a.fechaHoraRegistro
-        );
-
-
-    const fechaB =
-        getTimestamp(
-            b.fechaHoraRegistro
-        );
-
-
-    if(
-        fechaA === null &&
-        fechaB === null
-    ){
-
-        return 0;
-
-    }
-
-
-    if(
-        fechaA === null
-    ){
-
-        return 1;
-
-    }
-
-
-    if(
-        fechaB === null
-    ){
-
-        return -1;
-
-    }
-
-
-    return (
-        fechaA -
-        fechaB
-    );
-
-}
-
-
-/* =========================================================
-   CALCULAR DATOS DEL CASO
-   ========================================================= */
-
-function calcularDatosCaso(
-    caso
-){
-
-    const conFecha =
-        caso.actividades
-        .filter(
-            a =>
-                a.fechaRegistroDate
-        );
-
-
-    if(!conFecha.length){
-
-        caso.primeraFecha = null;
-
-        caso.ultimaFecha = null;
-
-        caso.tiempoTotal = null;
-
-        caso.tiemposEntre = [];
-
-        return;
-
-    }
-
-
-    caso.primeraFecha =
-        conFecha[0]
-        .fechaRegistroDate;
-
-
-    caso.ultimaFecha =
-        conFecha[
-            conFecha.length - 1
-        ]
-        .fechaRegistroDate;
-
-
-    caso.tiempoTotal =
-        caso.ultimaFecha.getTime() -
-        caso.primeraFecha.getTime();
-
-
-    caso.tiemposEntre = [];
-
-
-    for(
-        let i = 1;
-        i < conFecha.length;
-        i++
-    ){
-
-        const anterior =
-            conFecha[i - 1]
-            .fechaRegistroDate;
-
-
-        const actual =
-            conFecha[i]
-            .fechaRegistroDate;
-
-
-        caso.tiemposEntre.push({
-
-            actividadAnterior:
-                conFecha[i - 1],
-
-            actividadActual:
-                conFecha[i],
-
-            diferencia:
-                actual.getTime() -
-                anterior.getTime()
-
-        });
-
-    }
-
-}
-
-
-/* =========================================================
-   AUTO REFRESH
-   ========================================================= */
-
-function iniciarAutoRefresh(){
-
-    if(
-        autoRefreshTimer
-    ){
-
-        clearInterval(
-            autoRefreshTimer
-        );
-
-    }
-
-
-    autoRefreshTimer =
-        setInterval(
-            function(){
-
-                if(
-                    actividades.length
-                ){
-
-                    renderAll();
-
-                }
-
-            },
-            60000
-        );
-
-}
-
-
-/* =========================================================
-   RENDER ALL
-   ========================================================= */
-
-function renderAll(){
-
-    if(
-        !actividades.length
-    ){
-
-        return;
-
-    }
-
-
-    renderKPIs();
-
-    renderAgents();
-
-    renderCharts();
-
-    renderRepeatCases();
-
-    renderRepeatAgents();
-
-    renderRepeatDistribution();
-
-    renderTopRepeated();
-
-    renderActivityTable();
-
-
-    document
-        .getElementById(
-            "lastUpdate"
-        )
-        .textContent =
-
-        "Última actualización del dashboard: " +
-
-        new Date()
-        .toLocaleString(
-            "es-CO"
-        );
-
-}
-
-
-/* =========================================================
-   KPIs
-   ========================================================= */
-
-function renderKPIs(){
-
-    const casos =
-        Object.values(
-            casosMap
-        );
-
-
-    const repetidos =
-        casos.filter(
-            c =>
-                c.actividades.length > 1
-        );
-
-
-    const conTiempo =
-        casos.filter(
-            c =>
-                c.tiempoTotal !== null
-        );
-
-
-    let promedioTiempo = 0;
-
-
-    if(
-        conTiempo.length
-    ){
-
-        promedioTiempo =
-            conTiempo.reduce(
-                (
-                    total,
-                    c
-                ) =>
-                    total +
-                    c.tiempoTotal,
-                0
-            )
-            /
-            conTiempo.length;
-
-    }
-
-
-    const conFecha =
-        actividades.filter(
-            a =>
-                a.fechaRegistroDate
-        ).length;
-
-
-    const agentes =
-        new Set(
-            actividades.map(
-                a =>
-                    a.usuario
-            )
-        );
-
-
-    const pctRepetidos =
-        casos.length
-        ? (
-            repetidos.length /
-            casos.length *
-            100
-          ).toFixed(1)
-        : "0";
-
-
-    const pctFecha =
-        actividades.length
-        ? (
-            conFecha /
-            actividades.length *
-            100
-          ).toFixed(1)
-        : "0";
-
-
-    document
-        .getElementById(
-            "kpiActividades"
-        )
-        .textContent =
-        actividades.length;
-
-
-    document
-        .getElementById(
-            "kpiCasos"
-        )
-        .textContent =
-        casos.length;
-
-
-    document
-        .getElementById(
-            "kpiAgentes"
-        )
-        .textContent =
-        agentes.size;
-
-
-    document
-        .getElementById(
-            "kpiPromedioCaso"
-        )
-        .textContent =
-        casos.length
-        ? (
-            actividades.length /
-            casos.length
-          ).toFixed(2)
-        : "0";
-
-
-    document
-        .getElementById(
-            "kpiRepetidos"
-        )
-        .textContent =
-        repetidos.length;
-
-
-    document
-        .getElementById(
-            "kpiPctRepetidos"
-        )
-        .textContent =
-        pctRepetidos +
-        "%";
-
-
-    document
-        .getElementById(
-            "kpiTiempoPromedio"
-        )
-        .textContent =
-        formatDuration(
-            promedioTiempo
-        );
-
-
-    document
-        .getElementById(
-            "kpiConFecha"
-        )
-        .textContent =
-        pctFecha +
-        "%";
-
-}
-
-
-/* =========================================================
-   AGENTES
-   ========================================================= */
-
-function renderAgents(){
-
-    const agentes = {};
-
-
-    actividades.forEach(
-        actividad=>{
-
-            const nombre =
-                actividad.usuario ||
-                "Sin usuario";
-
-
-            if(
-                !agentes[nombre]
-            ){
-
-                agentes[nombre] = {
-
-                    actividades:0,
-
-                    casos:new Set(),
-
-                    repetidos:new Set(),
-
-                    modificaciones:0,
-
-                    tiempos:[],
-
-                    gestiones:{}
-
-                };
-
-            }
-
-
-            const x =
-                agentes[nombre];
-
-
-            x.actividades++;
-
-            x.modificaciones++;
-
-
-            x.casos.add(
-                actividad.caso
-            );
-
-
-            if(
-                actividad.tipoGestion
-            ){
-
-                x.gestiones[
-                    actividad.tipoGestion
-                ] =
-                    (
-                        x.gestiones[
-                            actividad.tipoGestion
-                        ] || 0
-                    ) + 1;
-
-            }
-
-        }
-    );
-
-
-    Object.values(
-        casosMap
-    )
-    .forEach(
-        caso=>{
-
-            if(
-                caso.actividades.length <= 1
-            ){
-
-                return;
-
-            }
-
-
-            const agentesCaso =
-                new Set(
-                    caso.actividades.map(
-                        a =>
-                            a.usuario
-                    )
-                );
-
-
-            agentesCaso.forEach(
-                agente=>{
-
-                    if(
-                        agentes[agente]
-                    ){
-
-                        agentes[
-                            agente
-                        ]
-                        .repetidos
-                        .add(
-                            caso.caso
-                        );
-
-                    }
-
-                }
-            );
-
-
-            caso.tiemposEntre
-                .forEach(
-                    x=>{
-
-                        const agente =
-                            x.actividadActual
-                            .usuario;
-
-
-                        if(
-                            agentes[agente]
-                        ){
-
-                            agentes[agente]
-                                .tiempos
-                                .push(
-                                    x.diferencia
-                                );
-
-                        }
-
-                    }
-                );
-
-        }
-    );
-
-
-    const tbody =
-        document.querySelector(
-            "#agentTable tbody"
-        );
-
-
-    tbody.innerHTML = "";
-
-
-    Object.entries(
-        agentes
-    )
-
-    .sort(
-        (
-            a,
-            b
-        ) =>
-            b[1].actividades -
-            a[1].actividades
-    )
-
-    .forEach(
-        (
-            [
-                nombre,
-                x
-            ]
-        )=>{
-
-            const promedio =
-                x.tiempos.length
-                ? x.tiempos.reduce(
-                    (
-                        total,
-                        tiempo
-                    ) =>
-                        total +
-                        tiempo,
-                    0
-                  )
-                  /
-                  x.tiempos.length
-                : null;
-
-
-            const principal =
-                Object.entries(
-                    x.gestiones
-                )
-                .sort(
-                    (
-                        a,
-                        b
-                    ) =>
-                        b[1] -
-                        a[1]
-                )[0];
-
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-
-            tr.innerHTML = `
-
-                <td>
-                    <strong>
-                        ${escapeHtml(nombre)}
-                    </strong>
-                </td>
-
-                <td>
-                    ${x.actividades}
-                </td>
-
-                <td>
-                    ${x.casos.size}
-                </td>
-
-                <td>
-                    ${x.repetidos.size}
-                </td>
-
-                <td>
-                    ${x.modificaciones}
-                </td>
-
-                <td>
-                    ${
-                        promedio !== null
-                        ? formatDuration(
-                            promedio
-                          )
-                        : "Sin dato"
-                    }
-                </td>
-
-                <td>
-                    ${
-                        principal
-                        ? escapeHtml(
-                            principal[0]
-                          )
-                        : "-"
-                    }
-                </td>
-
-            `;
-
-
-            tbody.appendChild(
-                tr
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CHARTS
-   ========================================================= */
-
-function renderCharts(){
-
-    renderSimpleChart(
-        "gestionChart",
-        contar(
-            actividades,
-            a =>
-                a.tipoGestion
-        )
-    );
-
-
-    renderSimpleChart(
-        "tipoCasoChart",
-        contar(
-            actividades,
-            a =>
-                a.tipoCaso
-        )
-    );
-
-
-    renderSimpleChart(
-        "estadoChart",
-        contar(
-            actividades,
-            a =>
-                a.estado
-        )
-    );
-
-
-    const horas = {};
-
-
-    actividades.forEach(
-        a=>{
-
-            const date =
-                a.fechaRegistroDate;
-
-
-            if(!date){
-
-                return;
-
-            }
-
-
-            const hour =
-                String(
-                    date.getHours()
-                )
-                .padStart(
-                    2,
-                    "0"
-                );
-
-
-            const key =
-                hour +
-                ":00";
-
-
-            horas[key] =
-                (
-                    horas[key] ||
-                    0
-                ) + 1;
-
-        }
-    );
-
-
-    renderSimpleChart(
-        "horaChart",
-        horas
-    );
-
-}
-
-
-/* =========================================================
-   CONTADOR
-   ========================================================= */
-
-function contar(
-    array,
-    fn
-){
-
-    const result = {};
-
-
-    array.forEach(
-        item=>{
-
-            const key =
-                fn(item) ||
-                "Sin especificar";
-
-
-            result[key] =
-                (
-                    result[key] ||
-                    0
-                ) + 1;
-
-        }
-    );
-
 
     return result;
+}
+
+
+/* ============================================================
+   FORMATO
+============================================================ */
+
+function pad(number) {
+
+    return String(number).padStart(2, "0");
 
 }
 
 
-/* =========================================================
-   CHART GENÉRICO
-   ========================================================= */
+function formatDate(date) {
 
-function renderSimpleChart(
-    containerId,
-    data
-){
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
 
-    const container =
-        document.getElementById(
-            containerId
-        );
+    return (
+        pad(date.getDate()) +
+        "/" +
+        pad(date.getMonth() + 1) +
+        "/" +
+        String(date.getFullYear()).slice(-2)
+    );
 
-
-    container.innerHTML = "";
-
-
-    const entries =
-        Object.entries(
-            data
-        );
+}
 
 
-    if(
-        !entries.length
-    ){
+function formatTime(date) {
 
-        container.innerHTML =
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
 
-            `<div class="empty">
-                Sin datos
-            </div>`;
+    return (
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes()) +
+        ":" +
+        pad(date.getSeconds())
+    );
 
+}
+
+
+function formatDateTime(date) {
+
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
+
+    return formatDate(date) + " " + formatTime(date);
+
+}
+
+
+function dateKey(date) {
+
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate())
+    );
+
+}
+
+
+function monthKey(date) {
+
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1)
+    );
+
+}
+
+
+function yearKey(date) {
+
+    if (!date || isNaN(date.getTime())) {
+        return "";
+    }
+
+    return String(date.getFullYear());
+
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+============================================================ */
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+function showStatus(message, type = "info") {
+
+    const element = document.getElementById("status");
+
+    element.textContent = message;
+    element.className = "status show " + type;
+
+}
+
+
+/* ============================================================
+   CARGA DEL EXCEL
+============================================================ */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", handleFile);
+
+
+async function handleFile(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) {
         return;
-
     }
 
+    try {
 
-    entries.sort(
-        (
-            a,
-            b
-        ) =>
-            b[1] -
-            a[1]
-    );
-
-
-    const max =
-        Math.max(
-            ...entries.map(
-                x =>
-                    x[1]
-            )
+        showStatus(
+            "Procesando archivo: " + file.name + "...",
+            "info"
         );
 
-
-    entries.forEach(
-        (
-            [
-                label,
-                value
-            ]
-        )=>{
-
-            const percentage =
-                max
-                ? value /
-                  max *
-                  100
-                : 0;
-
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "bar-row";
-
-
-            row.innerHTML = `
-
-                <div
-                    class="bar-label"
-                    title="${escapeHtml(label)}">
-
-                    ${escapeHtml(label)}
-
-                </div>
-
-                <div class="bar-container">
-
-                    <div
-                        class="bar"
-                        style="width:${percentage}%">
-                    </div>
-
-                </div>
-
-                <div class="bar-value">
-
-                    ${value}
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                row
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CASOS REPETIDOS
-   ========================================================= */
-
-function getRepeatedCases(){
-
-    return Object.values(
-        casosMap
-    )
-    .filter(
-        c =>
-            c.actividades.length > 1
-    );
-
-}
-
-
-/* =========================================================
-   RENDER CASOS REPETIDOS
-   ========================================================= */
-
-function renderRepeatCases(){
-
-    const container =
-        document.getElementById(
-            "repeatSummary"
-        );
-
-
-    const min =
-        Number(
-            document
-            .getElementById(
-                "repeatMinFilter"
-            )
-            .value
-        );
-
-
-    const agente =
-        document
-        .getElementById(
-            "repeatAgentFilter"
-        )
-        .value;
-
-
-    let casos =
-        getRepeatedCases()
-        .filter(
-            c =>
-                c.actividades.length >= min
-        );
-
-
-    if(agente){
-
-        casos =
-            casos.filter(
-                c =>
-                    c.actividades.some(
-                        a =>
-                            a.usuario === agente
-                    )
-            );
-
-    }
-
-
-    casos.sort(
-        (
-            a,
-            b
-        ) =>
-            b.actividades.length -
-            a.actividades.length
-    );
-
-
-    if(
-        !casos.length
-    ){
-
-        container.innerHTML =
-
-            `<div class="empty">
-
-                No hay casos que cumplan
-                los filtros seleccionados.
-
-            </div>`;
-
-        return;
-
-    }
-
-
-    container.innerHTML = "";
-
-
-    casos.forEach(
-        caso=>{
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            card.className =
-                "repeat-card";
-
-
-            const agentes =
-                [
-                    ...new Set(
-                        caso.actividades.map(
-                            a =>
-                                a.usuario
-                        )
-                    )
-                ];
-
-
-            const gestiones =
-                [
-                    ...new Set(
-                        caso.actividades.map(
-                            a =>
-                                a.tipoGestion
-                        )
-                    )
-                ];
-
-
-            const header =
-                document.createElement(
-                    "div"
-                );
-
-
-            header.className =
-                "repeat-header";
-
-
-            header.innerHTML = `
-
-                <div>
-
-                    <strong>
-                        Caso #${escapeHtml(
-                            caso.caso
-                        )}
-                    </strong>
-
-                    ${
-                        caso.tiempoTotal !== null
-                        ? `
-                            <div
-                                style="
-                                margin-top:5px;
-                                font-size:12px;
-                                color:#6b7280;
-                                ">
-
-                                Tiempo entre primera
-                                y última modificación:
-                                <strong>
-                                    ${formatDuration(
-                                        caso.tiempoTotal
-                                    )}
-                                </strong>
-
-                            </div>
-                          `
-                        : ""
-                    }
-
-                </div>
-
-
-                <div class="repeat-summary">
-
-                    <span
-                        class="badge badge-purple">
-
-                        ${caso.actividades.length}
-                        modificaciones
-
-                    </span>
-
-
-                    <span
-                        class="badge badge-blue">
-
-                        ${agentes.length}
-                        agente(s)
-
-                    </span>
-
-
-                    <span class="badge">
-
-                        ${gestiones.length}
-                        gestión(es)
-
-                    </span>
-
-                </div>
-
-            `;
-
-
-            card.appendChild(
-                header
-            );
-
-
-            const timeline =
-                document.createElement(
-                    "div"
-                );
-
-
-            timeline.className =
-                "timeline";
-
-
-            caso.actividades.forEach(
-                (
-                    actividad,
-                    index
-                )=>{
-
-                    const item =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    item.className =
-                        "timeline-item";
-
-
-                    const fecha =
-                        formatDateTime(
-                            actividad
-                            .fechaHoraRegistro
-                        );
-
-
-                    let gapHtml = "";
-
-
-                    if(
-                        index > 0
-                    ){
-
-                        const previous =
-                            caso.actividades[
-                                index - 1
-                            ];
-
-
-                        const previousTime =
-                            getTimestamp(
-                                previous
-                                .fechaHoraRegistro
-                            );
-
-
-                        const currentTime =
-                            getTimestamp(
-                                actividad
-                                .fechaHoraRegistro
-                            );
-
-
-                        if(
-                            previousTime !== null &&
-                            currentTime !== null
-                        ){
-
-                            const difference =
-                                currentTime -
-                                previousTime;
-
-
-                            gapHtml = `
-
-                                <div
-                                    class="timeline-gap">
-
-                                    ⏱ Tiempo desde
-                                    modificación anterior:
-                                    ${formatDuration(
-                                        difference
-                                    )}
-
-                                </div>
-
-                            `;
-
-                        }
-
-                    }
-
-
-                    item.innerHTML = `
-
-                        <div
-                            class="timeline-dot">
-                        </div>
-
-
-                        <div
-                            class="timeline-date">
-
-                            🕐 Registrado:
-                            ${escapeHtml(fecha)}
-
-                        </div>
-
-
-                        <div
-                            class="timeline-user">
-
-                            ${escapeHtml(
-                                actividad.usuario
-                            )}
-
-                        </div>
-
-
-                        <div
-                            class="timeline-detail">
-
-                            Gestión:
-                            <strong>
-                                ${escapeHtml(
-                                    actividad.tipoGestion
-                                )}
-                            </strong>
-
-                            &nbsp; · &nbsp;
-
-                            Estado:
-                            <strong>
-                                ${escapeHtml(
-                                    actividad.estado
-                                )}
-                            </strong>
-
-                            ${
-                                actividad.tipoCaso
-                                ? `
-
-                                    &nbsp; · &nbsp;
-
-                                    Tipo:
-                                    <strong>
-                                        ${escapeHtml(
-                                            actividad.tipoCaso
-                                        )}
-                                    </strong>
-
-                                  `
-                                : ""
-                            }
-
-                        </div>
-
-
-                        ${gapHtml}
-
-                    `;
-
-
-                    timeline.appendChild(
-                        item
-                    );
-
-                }
-            );
-
-
-            card.appendChild(
-                timeline
-            );
-
-
-            container.appendChild(
-                card
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   AGENTES EN CASOS REPETIDOS
-   ========================================================= */
-
-function renderRepeatAgents(){
-
-    const data = {};
-
-
-    getRepeatedCases()
-    .forEach(
-        caso=>{
-
-            caso.actividades
-            .forEach(
-                actividad=>{
-
-                    const agente =
-                        actividad.usuario;
-
-
-                    if(
-                        !data[agente]
-                    ){
-
-                        data[agente] = {
-
-                            casos:new Set(),
-
-                            modificaciones:0,
-
-                            tratamiento:0,
-
-                            actualizacion:0,
-
-                            noRespuesta:0,
-
-                            otros:0
-
-                        };
-
-                    }
-
-
-                    data[agente]
-                        .casos
-                        .add(
-                            caso.caso
-                        );
-
-
-                    data[agente]
-                        .modificaciones++;
-
-
-                    const gestion =
-                        norm(
-                            actividad
-                            .tipoGestion
-                        );
-
-
-                    if(
-                        gestion.includes(
-                            "tratamiento"
-                        )
-                    ){
-
-                        data[agente]
-                            .tratamiento++;
-
-                    }
-
-                    else if(
-                        gestion.includes(
-                            "actualizacion"
-                        )
-                    ){
-
-                        data[agente]
-                            .actualizacion++;
-
-                    }
-
-                    else if(
-                        gestion.includes(
-                            "no requiere"
-                        )
-                    ){
-
-                        data[agente]
-                            .noRespuesta++;
-
-                    }
-
-                    else{
-
-                        data[agente]
-                            .otros++;
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-
-    const tbody =
-        document.querySelector(
-            "#repeatAgentTable tbody"
-        );
-
-
-    tbody.innerHTML = "";
-
-
-    Object.entries(
-        data
-    )
-
-    .sort(
-        (
-            a,
-            b
-        ) =>
-            b[1].modificaciones -
-            a[1].modificaciones
-    )
-
-    .forEach(
-        (
-            [
-                agente,
-                x
-            ]
-        )=>{
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-
-            tr.innerHTML = `
-
-                <td>
-
-                    <strong>
-                        ${escapeHtml(
-                            agente
-                        )}
-                    </strong>
-
-                </td>
-
-                <td>
-                    ${x.casos.size}
-                </td>
-
-                <td>
-                    ${x.modificaciones}
-                </td>
-
-                <td>
-                    ${x.tratamiento}
-                </td>
-
-                <td>
-                    ${x.actualizacion}
-                </td>
-
-                <td>
-                    ${x.noRespuesta}
-                </td>
-
-                <td>
-                    ${x.otros}
-                </td>
-
-            `;
-
-
-            tbody.appendChild(
-                tr
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   DISTRIBUCIÓN REPETICIONES
-   ========================================================= */
-
-function renderRepeatDistribution(){
-
-    const distribucion = {};
-
-
-    getRepeatedCases()
-    .forEach(
-        caso=>{
-
-            let categoria;
-
-
-            if(
-                caso.actividades.length >= 4
-            ){
-
-                categoria =
-                    "4+";
-
+        const buffer = await file.arrayBuffer();
+
+        const workbook = XLSX.read(buffer, {
+            type: "array",
+            cellDates: true,
+            raw: true
+        });
+
+        const firstSheetName =
+            workbook.SheetNames[0];
+
+        const sheet =
+            workbook.Sheets[firstSheetName];
+
+        rawRows = XLSX.utils.sheet_to_json(
+            sheet,
+            {
+                defval: "",
+                raw: true
             }
+        );
 
-            else{
-
-                categoria =
-                    String(
-                        caso.actividades.length
-                    );
-
-            }
-
-
-            distribucion[
-                categoria
-            ] =
-                (
-                    distribucion[
-                        categoria
-                    ] ||
-                    0
-                ) + 1;
-
+        if (!rawRows.length) {
+            throw new Error(
+                "El archivo no contiene registros."
+            );
         }
-    );
+
+        processRows();
+
+        populateFilters();
+
+        updateDashboard();
+
+        renderAllTables();
+
+        showStatus(
+            "Archivo cargado correctamente: " +
+            rawRows.length +
+            " registros procesados.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        showStatus(
+            "No fue posible procesar el archivo: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
 
 
-    const orden = {
+/* ============================================================
+   PROCESAMIENTO PRINCIPAL
+============================================================ */
 
-        "2":0,
+function processRows() {
 
-        "3":1,
+    const headers = Object.keys(rawRows[0]);
 
-        "4+":2
+    const columns = {
+
+        caseNumber:
+            findColumn(
+                headers,
+                columnAliases.caseNumber
+            ),
+
+        type:
+            findColumn(
+                headers,
+                columnAliases.type
+            ),
+
+        status:
+            findColumn(
+                headers,
+                columnAliases.status
+            ),
+
+        date:
+            findColumn(
+                headers,
+                columnAliases.date
+            ),
+
+        time:
+            findColumn(
+                headers,
+                columnAliases.time
+            ),
+
+        dateTime:
+            findColumn(
+                headers,
+                columnAliases.dateTime
+            ),
+
+        agent:
+            findColumn(
+                headers,
+                columnAliases.agent
+            ),
+
+        management:
+            findColumn(
+                headers,
+                columnAliases.management
+            ),
+
+        email:
+            findColumn(
+                headers,
+                columnAliases.email
+            )
 
     };
 
+    console.log("Columnas detectadas:", columns);
 
-    const container =
-        document.getElementById(
-            "repeatDistribution"
-        );
+    processedRows = rawRows.map(
+        (row, index) => {
+
+            const caseNumber =
+                columns.caseNumber
+                    ? row[columns.caseNumber]
+                    : "";
+
+            const type =
+                columns.type
+                    ? row[columns.type]
+                    : "";
+
+            const status =
+                columns.status
+                    ? row[columns.status]
+                    : "";
+
+            const agent =
+                columns.agent
+                    ? row[columns.agent]
+                    : "";
+
+            const management =
+                columns.management
+                    ? row[columns.management]
+                    : "";
+
+            const email =
+                columns.email
+                    ? row[columns.email]
+                    : "";
+
+            const dateValue =
+                columns.date
+                    ? row[columns.date]
+                    : "";
+
+            const timeValue =
+                columns.time
+                    ? row[columns.time]
+                    : "";
+
+            let registrationDate = null;
+
+            /*
+             * PRIORIDAD:
+             * 1. FechaHoraRegistro
+             * 2. Fecha + Hora
+             */
+
+            if (columns.dateTime) {
+
+                registrationDate =
+                    parseDateValue(
+                        row[columns.dateTime]
+                    );
+
+            }
+
+            if (!registrationDate) {
+
+                registrationDate =
+                    combineDateAndTime(
+                        dateValue,
+                        timeValue
+                    );
+
+            }
+
+            const baseDate =
+                parseDateValue(dateValue);
+
+            let activityDate =
+                baseDate || registrationDate;
+
+            return {
+
+                index,
+
+                caseNumber:
+                    String(caseNumber ?? "").trim(),
+
+                type:
+                    String(type ?? "").trim(),
+
+                status:
+                    String(status ?? "").trim(),
+
+                agent:
+                    String(agent ?? "").trim(),
+
+                management:
+                    String(management ?? "").trim(),
+
+                email:
+                    String(email ?? "").trim(),
+
+                date:
+                    activityDate,
+
+                time:
+                    registrationDate,
+
+                registrationDate,
+
+                raw: row
+
+            };
+
+        }
+    );
+
+    /*
+     * Orden cronológico.
+     */
+
+    processedRows.sort(
+        (a, b) => {
+
+            const ta =
+                a.registrationDate
+                    ? a.registrationDate.getTime()
+                    : 0;
+
+            const tb =
+                b.registrationDate
+                    ? b.registrationDate.getTime()
+                    : 0;
+
+            return ta - tb;
+
+        }
+    );
+
+    calculateRepetitions();
+
+}
 
 
-    container.innerHTML = "";
+/* ============================================================
+   REPETICIONES
+============================================================ */
+
+function calculateRepetitions() {
+
+    const groups = new Map();
+
+    processedRows.forEach(row => {
+
+        const caseValue =
+            normalizeText(row.caseNumber);
+
+        const agentValue =
+            normalizeText(row.agent);
+
+        if (!caseValue || !agentValue) {
+            return;
+        }
+
+        const key =
+            caseValue + "||" + agentValue;
+
+        if (!groups.has(key)) {
+            groups.set(key, []);
+        }
+
+        groups.get(key).push(row);
+
+    });
+
+    processedRows.forEach(row => {
+
+        const key =
+            normalizeText(row.caseNumber) +
+            "||" +
+            normalizeText(row.agent);
+
+        const group =
+            groups.get(key) || [];
+
+        row.repeatCount = group.length;
+
+        row.isRepeated =
+            group.length > 1;
+
+        row.repeatGroup =
+            group;
+
+    });
+
+}
 
 
-    const entries =
-        Object.entries(
-            distribucion
-        )
-        .sort(
-            (
-                a,
-                b
-            ) =>
-                (
-                    orden[a[0]] ??
-                    99
-                )
-                -
-                (
-                    orden[b[0]] ??
-                    99
-                )
-        );
+/* ============================================================
+   MÉTRICAS
+============================================================ */
+
+function getUniqueCases(rows) {
+
+    return new Set(
+        rows
+            .map(r => normalizeText(r.caseNumber))
+            .filter(Boolean)
+    ).size;
+
+}
 
 
-    if(
-        !entries.length
-    ){
+function getUniqueAgents(rows) {
 
-        container.innerHTML =
+    return new Set(
+        rows
+            .map(r => normalizeText(r.agent))
+            .filter(Boolean)
+    ).size;
 
-            `<div class="empty">
-                Sin casos repetidos.
-            </div>`;
+}
 
-        return;
+
+function getRepeatedGroups(rows = processedRows) {
+
+    const groups = new Map();
+
+    rows.forEach(row => {
+
+        if (!row.isRepeated) {
+            return;
+        }
+
+        const key =
+            normalizeText(row.caseNumber) +
+            "||" +
+            normalizeText(row.agent);
+
+        if (!groups.has(key)) {
+            groups.set(key, row.repeatGroup);
+        }
+
+    });
+
+    return Array.from(groups.values());
+
+}
+
+
+function countRepeatedRecords(rows = processedRows) {
+
+    return rows.filter(
+        r => r.isRepeated
+    ).length;
+
+}
+
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+
+function updateDashboard() {
+
+    const totalRecords =
+        processedRows.length;
+
+    const uniqueCases =
+        getUniqueCases(processedRows);
+
+    const agents =
+        getUniqueAgents(processedRows);
+
+    const repeatedGroups =
+        getRepeatedGroups();
+
+    const repeatedRecords =
+        countRepeatedRecords();
+
+    const productivity =
+        agents > 0
+            ? (uniqueCases / agents).toFixed(1)
+            : "0";
+
+    document.getElementById(
+        "kpiRecords"
+    ).textContent =
+        totalRecords.toLocaleString("es-ES");
+
+    document.getElementById(
+        "kpiCases"
+    ).textContent =
+        uniqueCases.toLocaleString("es-ES");
+
+    document.getElementById(
+        "kpiAgents"
+    ).textContent =
+        agents.toLocaleString("es-ES");
+
+    document.getElementById(
+        "kpiRepeated"
+    ).textContent =
+        repeatedRecords.toLocaleString("es-ES");
+
+    document.getElementById(
+        "kpiRepeatedCases"
+    ).textContent =
+        repeatedGroups.length.toLocaleString("es-ES");
+
+    document.getElementById(
+        "kpiAverage"
+    ).textContent =
+        productivity;
+
+    updateInconsistencyKPIs();
+
+    renderCharts();
+
+}
+
+
+/* ============================================================
+   AGRUPACIONES
+============================================================ */
+
+function groupByDay(rows) {
+
+    const map = new Map();
+
+    rows.forEach(row => {
+
+        if (!row.registrationDate) {
+            return;
+        }
+
+        const key =
+            dateKey(row.registrationDate);
+
+        if (!map.has(key)) {
+
+            map.set(key, {
+                records: 0,
+                cases: new Set(),
+                agents: new Set(),
+                repetitions: 0
+            });
+
+        }
+
+        const item = map.get(key);
+
+        item.records++;
+
+        if (row.caseNumber) {
+            item.cases.add(
+                normalizeText(row.caseNumber)
+            );
+        }
+
+        if (row.agent) {
+            item.agents.add(
+                normalizeText(row.agent)
+            );
+        }
+
+        if (row.isRepeated) {
+            item.repetitions++;
+        }
+
+    });
+
+    return map;
+
+}
+
+
+function groupByMonth(rows) {
+
+    const map = new Map();
+
+    rows.forEach(row => {
+
+        if (!row.registrationDate) {
+            return;
+        }
+
+        const key =
+            monthKey(row.registrationDate);
+
+        if (!map.has(key)) {
+
+            map.set(key, {
+                records: 0,
+                cases: new Set(),
+                agents: new Set(),
+                repetitions: 0
+            });
+
+        }
+
+        const item = map.get(key);
+
+        item.records++;
+
+        if (row.caseNumber) {
+            item.cases.add(
+                normalizeText(row.caseNumber)
+            );
+        }
+
+        if (row.agent) {
+            item.agents.add(
+                normalizeText(row.agent)
+            );
+        }
+
+        if (row.isRepeated) {
+            item.repetitions++;
+        }
+
+    });
+
+    return map;
+
+}
+
+
+function groupByYear(rows) {
+
+    const map = new Map();
+
+    rows.forEach(row => {
+
+        if (!row.registrationDate) {
+            return;
+        }
+
+        const key =
+            yearKey(row.registrationDate);
+
+        if (!map.has(key)) {
+
+            map.set(key, {
+                records: 0,
+                cases: new Set(),
+                agents: new Set(),
+                repetitions: 0
+            });
+
+        }
+
+        const item = map.get(key);
+
+        item.records++;
+
+        if (row.caseNumber) {
+            item.cases.add(
+                normalizeText(row.caseNumber)
+            );
+        }
+
+        if (row.agent) {
+            item.agents.add(
+                normalizeText(row.agent)
+            );
+        }
+
+        if (row.isRepeated) {
+            item.repetitions++;
+        }
+
+    });
+
+    return map;
+
+}
+
+
+/* ============================================================
+   GRÁFICAS
+============================================================ */
+
+function destroyChart(name) {
+
+    if (charts[name]) {
+
+        charts[name].destroy();
+
+        charts[name] = null;
 
     }
 
-
-    const max =
-        Math.max(
-            ...entries.map(
-                x =>
-                    x[1]
-            )
-        );
+}
 
 
-    entries.forEach(
-        (
-            [
-                label,
-                value
-            ]
-        )=>{
+function renderCharts() {
 
-            const row =
-                document.createElement(
-                    "div"
-                );
+    renderDailyChart();
+    renderMonthlyChart();
+    renderYearlyChart();
+    renderAgentChart();
+    renderStatusChart();
 
-
-            row.className =
-                "bar-row";
-
-
-            const width =
-                value /
-                max *
-                100;
-
-
-            row.innerHTML = `
-
-                <div class="bar-label">
-
-                    ${escapeHtml(label)}
-                    ${
-                        label === "4+"
-                        ? " modificaciones"
-                        : " modificaciones"
-                    }
-
-                </div>
-
-
-                <div class="bar-container">
-
-                    <div
-                        class="bar"
-                        style="width:${width}%">
-                    </div>
-
-                </div>
-
-
-                <div class="bar-value">
-
-                    ${value}
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                row
-            );
-
-        }
-    );
+    renderDetailedCharts();
 
 }
 
 
-/* =========================================================
-   TOP CASOS REPETIDOS
-   ========================================================= */
+function renderDailyChart() {
 
-function renderTopRepeated(){
+    destroyChart("daily");
+
+    const groups =
+        groupByDay(processedRows);
+
+    const labels =
+        Array.from(groups.keys()).sort();
+
+    const values =
+        labels.map(
+            key =>
+                groups.get(key).cases.size
+        );
+
+    charts.daily =
+        new Chart(
+            document.getElementById(
+                "dailyChart"
+            ),
+            {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Casos únicos",
+                        data: values,
+                        tension: .25
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        );
+
+}
+
+
+function renderMonthlyChart() {
+
+    destroyChart("monthly");
+
+    const groups =
+        groupByMonth(processedRows);
+
+    const labels =
+        Array.from(groups.keys()).sort();
+
+    const values =
+        labels.map(
+            key =>
+                groups.get(key).cases.size
+        );
+
+    charts.monthly =
+        new Chart(
+            document.getElementById(
+                "monthlyChart"
+            ),
+            {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Casos únicos",
+                        data: values
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+}
+
+
+function renderYearlyChart() {
+
+    destroyChart("yearly");
+
+    const groups =
+        groupByYear(processedRows);
+
+    const labels =
+        Array.from(groups.keys()).sort();
+
+    const values =
+        labels.map(
+            key =>
+                groups.get(key).cases.size
+        );
+
+    charts.yearly =
+        new Chart(
+            document.getElementById(
+                "yearlyChart"
+            ),
+            {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Casos únicos",
+                        data: values
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+}
+
+
+function renderAgentChart() {
+
+    destroyChart("agent");
+
+    const map = new Map();
+
+    processedRows.forEach(row => {
+
+        const agent =
+            row.agent || "Sin agente";
+
+        map.set(
+            agent,
+            (map.get(agent) || 0) + 1
+        );
+
+    });
+
+    const sorted =
+        Array.from(map.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 20);
+
+    charts.agent =
+        new Chart(
+            document.getElementById(
+                "agentChart"
+            ),
+            {
+                type: "bar",
+                data: {
+                    labels:
+                        sorted.map(x => x[0]),
+                    datasets: [{
+                        label: "Registros",
+                        data:
+                            sorted.map(x => x[1])
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+}
+
+
+function renderStatusChart() {
+
+    destroyChart("status");
+
+    const map = new Map();
+
+    processedRows.forEach(row => {
+
+        const status =
+            row.status || "Sin estado";
+
+        map.set(
+            status,
+            (map.get(status) || 0) + 1
+        );
+
+    });
+
+    const entries =
+        Array.from(map.entries())
+            .sort((a, b) => b[1] - a[1]);
+
+    charts.status =
+        new Chart(
+            document.getElementById(
+                "statusChart"
+            ),
+            {
+                type: "doughnut",
+                data: {
+                    labels:
+                        entries.map(x => x[0]),
+                    datasets: [{
+                        data:
+                            entries.map(x => x[1])
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+}
+
+
+/* ============================================================
+   GRÁFICAS DETALLADAS
+============================================================ */
+
+function renderDetailedCharts() {
+
+    destroyChart("dailyDetailed");
+    destroyChart("monthlyDetailed");
+    destroyChart("yearlyDetailed");
+
+    const daily =
+        groupByDay(processedRows);
+
+    const dailyLabels =
+        Array.from(daily.keys()).sort();
+
+    charts.dailyDetailed =
+        new Chart(
+            document.getElementById(
+                "dailyDetailedChart"
+            ),
+            {
+                type: "line",
+                data: {
+                    labels: dailyLabels,
+                    datasets: [
+                        {
+                            label: "Casos únicos",
+                            data:
+                                dailyLabels.map(
+                                    k =>
+                                        daily.get(k)
+                                            .cases.size
+                                )
+                        },
+                        {
+                            label: "Registros",
+                            data:
+                                dailyLabels.map(
+                                    k =>
+                                        daily.get(k)
+                                            .records
+                                )
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+
+    const monthly =
+        groupByMonth(processedRows);
+
+    const monthlyLabels =
+        Array.from(monthly.keys()).sort();
+
+    charts.monthlyDetailed =
+        new Chart(
+            document.getElementById(
+                "monthlyDetailedChart"
+            ),
+            {
+                type: "bar",
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [
+                        {
+                            label: "Casos únicos",
+                            data:
+                                monthlyLabels.map(
+                                    k =>
+                                        monthly.get(k)
+                                            .cases.size
+                                )
+                        },
+                        {
+                            label: "Registros",
+                            data:
+                                monthlyLabels.map(
+                                    k =>
+                                        monthly.get(k)
+                                            .records
+                                )
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+
+    const yearly =
+        groupByYear(processedRows);
+
+    const yearlyLabels =
+        Array.from(yearly.keys()).sort();
+
+    charts.yearlyDetailed =
+        new Chart(
+            document.getElementById(
+                "yearlyDetailedChart"
+            ),
+            {
+                type: "bar",
+                data: {
+                    labels: yearlyLabels,
+                    datasets: [
+                        {
+                            label: "Casos únicos",
+                            data:
+                                yearlyLabels.map(
+                                    k =>
+                                        yearly.get(k)
+                                            .cases.size
+                                )
+                        },
+                        {
+                            label: "Registros",
+                            data:
+                                yearlyLabels.map(
+                                    k =>
+                                        yearly.get(k)
+                                            .records
+                                )
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            }
+        );
+
+
+    renderDailyTable();
+    renderMonthlyTable();
+    renderYearlyTable();
+
+}
+
+
+/* ============================================================
+   TABLAS PRODUCTIVIDAD
+============================================================ */
+
+function renderDailyTable() {
 
     const tbody =
-        document.querySelector(
-            "#topRepeatedTable tbody"
+        document.getElementById(
+            "dailyTable"
         );
 
+    const groups =
+        groupByDay(processedRows);
 
-    tbody.innerHTML = "";
+    const keys =
+        Array.from(groups.keys()).sort();
 
+    tbody.innerHTML =
+        keys.map(key => {
 
-    getRepeatedCases()
+            const item =
+                groups.get(key);
 
-    .sort(
-        (
-            a,
-            b
-        ) =>
-            b.actividades.length -
-            a.actividades.length
-    )
+            const date =
+                new Date(key + "T00:00:00");
 
-    .slice(
-        0,
-        20
-    )
-
-    .forEach(
-        caso=>{
-
-            const agentes =
-                new Set(
-                    caso.actividades.map(
-                        a =>
-                            a.usuario
-                    )
-                );
-
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-
-            tr.innerHTML = `
-
-                <td>
-
-                    <strong>
-                        ${escapeHtml(
-                            caso.caso
-                        )}
-                    </strong>
-
-                </td>
-
-
-                <td>
-
-                    <span
-                        class="badge badge-purple">
-
-                        ${caso.actividades.length}
-
-                    </span>
-
-                </td>
-
-
-                <td>
-                    ${agentes.size}
-                </td>
-
-
-                <td>
-
-                    ${
-                        caso.tiempoTotal !== null
-                        ? formatDuration(
-                            caso.tiempoTotal
-                          )
-                        : "Sin dato"
-                    }
-
-                </td>
-
+            return `
+                <tr>
+                    <td>${formatDate(date)}</td>
+                    <td>${item.records}</td>
+                    <td><strong>${item.cases.size}</strong></td>
+                    <td>${item.agents.size}</td>
+                    <td>${item.repetitions}</td>
+                </tr>
             `;
 
-
-            tbody.appendChild(
-                tr
-            );
-
-        }
-    );
+        }).join("");
 
 }
 
 
-/* =========================================================
-   TABLA DE ACTIVIDADES
-   ========================================================= */
+function renderMonthlyTable() {
 
-function renderActivityTable(){
+    const tbody =
+        document.getElementById(
+            "monthlyTable"
+        );
+
+    const groups =
+        groupByMonth(processedRows);
+
+    const keys =
+        Array.from(groups.keys()).sort();
+
+    tbody.innerHTML =
+        keys.map(key => {
+
+            const item =
+                groups.get(key);
+
+            return `
+                <tr>
+                    <td>${key}</td>
+                    <td>${item.records}</td>
+                    <td><strong>${item.cases.size}</strong></td>
+                    <td>${item.agents.size}</td>
+                    <td>${item.repetitions}</td>
+                </tr>
+            `;
+
+        }).join("");
+
+}
+
+
+function renderYearlyTable() {
+
+    const tbody =
+        document.getElementById(
+            "yearlyTable"
+        );
+
+    const groups =
+        groupByYear(processedRows);
+
+    const keys =
+        Array.from(groups.keys()).sort();
+
+    tbody.innerHTML =
+        keys.map(key => {
+
+            const item =
+                groups.get(key);
+
+            return `
+                <tr>
+                    <td>${key}</td>
+                    <td>${item.records}</td>
+                    <td><strong>${item.cases.size}</strong></td>
+                    <td>${item.agents.size}</td>
+                    <td>${item.repetitions}</td>
+                </tr>
+            `;
+
+        }).join("");
+
+}
+
+
+/* ============================================================
+   FILTROS
+============================================================ */
+
+function populateFilters() {
+
+    const agents =
+        [...new Set(
+            processedRows
+                .map(r => r.agent)
+                .filter(Boolean)
+        )]
+        .sort((a, b) =>
+            a.localeCompare(b)
+        );
+
+    const managements =
+        [...new Set(
+            processedRows
+                .map(r => r.management)
+                .filter(Boolean)
+        )]
+        .sort((a, b) =>
+            a.localeCompare(b)
+        );
+
+    const statuses =
+        [...new Set(
+            processedRows
+                .map(r => r.status)
+                .filter(Boolean)
+        )]
+        .sort((a, b) =>
+            a.localeCompare(b)
+        );
+
+    const agentFilter =
+        document.getElementById(
+            "agentFilter"
+        );
+
+    const managementFilter =
+        document.getElementById(
+            "managementFilter"
+        );
+
+    const statusFilter =
+        document.getElementById(
+            "statusFilter"
+        );
+
+    agentFilter.innerHTML =
+        `<option value="">Todos los agentes</option>` +
+        agents.map(
+            agent =>
+                `<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`
+        ).join("");
+
+    managementFilter.innerHTML =
+        `<option value="">Todos los tipos de gestión</option>` +
+        managements.map(
+            management =>
+                `<option value="${escapeHtml(management)}">${escapeHtml(management)}</option>`
+        ).join("");
+
+    statusFilter.innerHTML =
+        `<option value="">Todos los estados</option>` +
+        statuses.map(
+            status =>
+                `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`
+        ).join("");
+
+
+    const incAgents =
+        document.getElementById(
+            "incAgentFilter"
+        );
+
+    incAgents.innerHTML =
+        `<option value="">Todos los agentes</option>` +
+        agents.map(
+            agent =>
+                `<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`
+        ).join("");
+
+}
+
+
+/* ============================================================
+   DETALLE
+============================================================ */
+
+function getFilteredRows() {
 
     const search =
-        norm(
-            document
-            .getElementById(
+        normalizeText(
+            document.getElementById(
                 "searchInput"
-            )
-            .value
+            ).value
         );
-
 
     const agent =
-        document
-        .getElementById(
+        document.getElementById(
             "agentFilter"
-        )
-        .value;
+        ).value;
 
-
-    const gestion =
-        document
-        .getElementById(
-            "gestionFilter"
-        )
-        .value;
-
+    const management =
+        document.getElementById(
+            "managementFilter"
+        ).value;
 
     const status =
-        document
-        .getElementById(
+        document.getElementById(
             "statusFilter"
-        )
-        .value;
+        ).value;
 
+    return processedRows.filter(row => {
 
-    const type =
-        document
-        .getElementById(
-            "typeFilter"
-        )
-        .value;
-
-
-    const tbody =
-        document.querySelector(
-            "#activityTable tbody"
+        const searchable = normalizeText(
+            [
+                row.caseNumber,
+                row.agent,
+                row.email,
+                row.management,
+                row.status,
+                row.type
+            ].join(" ")
         );
 
+        if (
+            search &&
+            !searchable.includes(search)
+        ) {
+            return false;
+        }
 
-    tbody.innerHTML = "";
+        if (
+            agent &&
+            row.agent !== agent
+        ) {
+            return false;
+        }
+
+        if (
+            management &&
+            row.management !== management
+        ) {
+            return false;
+        }
+
+        if (
+            status &&
+            row.status !== status
+        ) {
+            return false;
+        }
+
+        return true;
+
+    });
+
+}
 
 
-    const datos =
-        actividades
-        .filter(
-            actividad=>{
+function renderDetailTable() {
 
-                const texto =
-                    norm(
+    const tbody =
+        document.getElementById(
+            "detailTable"
+        );
+
+    const rows =
+        getFilteredRows();
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="empty">
+                    No hay registros para los filtros seleccionados.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML =
+        rows.map(row => {
+
+            const repeated =
+                row.isRepeated;
+
+            return `
+                <tr class="${repeated ? "incongruencia" : ""}">
+
+                    <td class="case-number">
+                        ${escapeHtml(row.caseNumber)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(row.type)}
+                    </td>
+
+                    <td>
+                        <span class="badge">
+                            ${escapeHtml(row.status)}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${formatDate(row.date)}
+                    </td>
+
+                    <td>
+                        ${formatTime(row.time)}
+                    </td>
+
+                    <td class="datetime">
+                        ${formatDateTime(row.registrationDate)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(row.agent)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(row.management)}
+                    </td>
+
+                    <td>
+                        ${
+                            repeated
+                                ? `<span class="badge repeat-badge">
+                                    Repetido (${row.repeatCount})
+                                   </span>`
+                                : `<span class="badge ok-badge">
+                                    Único
+                                   </span>`
+                        }
+                    </td>
+
+                </tr>
+            `;
+
+        }).join("");
+
+}
+
+
+/* ============================================================
+   INCONGRUENCIAS
+============================================================ */
+
+function updateInconsistencyKPIs() {
+
+    const groups =
+        getRepeatedGroups();
+
+    const records =
+        groups.reduce(
+            (total, group) =>
+                total + group.length,
+            0
+        );
+
+    const agents =
+        new Set(
+            groups.map(
+                group =>
+                    group[0]?.agent
+            )
+        ).size;
+
+    document.getElementById(
+        "incCases"
+    ).textContent =
+        groups.length;
+
+    document.getElementById(
+        "incRecords"
+    ).textContent =
+        records;
+
+    document.getElementById(
+        "incAgents"
+    ).textContent =
+        agents;
+
+}
+
+
+function getFilteredInconsistencies() {
+
+    const search =
+        normalizeText(
+            document.getElementById(
+                "incSearch"
+            ).value
+        );
+
+    const agent =
+        document.getElementById(
+            "incAgentFilter"
+        ).value;
+
+    const minRepeat =
+        Number(
+            document.getElementById(
+                "incMinRepeat"
+            ).value
+        );
+
+    return getRepeatedGroups()
+        .filter(group => {
+
+            if (
+                group.length <
+                minRepeat
+            ) {
+                return false;
+            }
+
+            const first =
+                group[0];
+
+            if (
+                agent &&
+                first.agent !== agent
+            ) {
+                return false;
+            }
+
+            if (search) {
+
+                const text =
+                    normalizeText(
                         [
-                            actividad.caso,
-
-                            actividad.tipoCaso,
-
-                            actividad.estado,
-
-                            actividad.fecha,
-
-                            actividad.hora,
-
-                            actividad.usuario,
-
-                            actividad.correo,
-
-                            actividad.tipoGestion
-
+                            first.caseNumber,
+                            first.agent
                         ].join(" ")
                     );
 
-
-                if(
-                    search &&
-                    !texto.includes(
-                        search
-                    )
-                ){
-
+                if (
+                    !text.includes(search)
+                ) {
                     return false;
-
                 }
-
-
-                if(
-                    agent &&
-                    actividad.usuario !==
-                    agent
-                ){
-
-                    return false;
-
-                }
-
-
-                if(
-                    gestion &&
-                    actividad.tipoGestion !==
-                    gestion
-                ){
-
-                    return false;
-
-                }
-
-
-                if(
-                    status &&
-                    actividad.estado !==
-                    status
-                ){
-
-                    return false;
-
-                }
-
-
-                if(
-                    type &&
-                    actividad.tipoCaso !==
-                    type
-                ){
-
-                    return false;
-
-                }
-
-
-                return true;
 
             }
+
+            return true;
+
+        })
+        .sort(
+            (a, b) =>
+                b.length - a.length
         );
 
+}
 
-    datos.sort(
-        (
-            a,
-            b
-        ) =>
-            compararFechaActividad(
-                b,
-                a
-            )
-    );
 
+function renderInconsistencyTable() {
 
-    datos.forEach(
-        actividad=>{
+    const tbody =
+        document.getElementById(
+            "incTable"
+        );
 
-            const cantidad =
-                casosMap[
-                    actividad.caso
-                ]
-                ? casosMap[
-                    actividad.caso
-                  ]
-                  .actividades
-                  .length
-                : 1;
+    const groups =
+        getFilteredInconsistencies();
 
-
-            const fechaRegistro =
-                formatDateTime(
-                    actividad
-                    .fechaHoraRegistro
-                );
-
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-
-            tr.innerHTML = `
-
-                <td>
-
-                    <strong>
-                        ${escapeHtml(
-                            actividad.caso
-                        )}
-                    </strong>
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        actividad.tipoCaso
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        actividad.estado
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        formatDateTime(
-                            actividad.fecha
-                        )
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        String(
-                            actividad.hora ||
-                            ""
-                        )
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    <strong>
-
-                        ${escapeHtml(
-                            fechaRegistro
-                        )}
-
-                    </strong>
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        actividad.usuario
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        actividad.correo
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHtml(
-                        actividad.tipoGestion
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${
-                        cantidad > 1
-
-                        ? `
-
-                            <span
-                                class="badge badge-purple">
-
-                                ${cantidad}
-
-                            </span>
-
-                          `
-
-                        : `
-
-                            <span
-                                class="badge">
-
-                                1
-
-                            </span>
-
-                          `
-
-                    }
-
-                </td>
-
-            `;
-
-
-            tbody.appendChild(
-                tr
-            );
-
-        }
-    );
-
-
-    if(
-        !datos.length
-    ){
+    if (!groups.length) {
 
         tbody.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="10"
-                    class="empty">
-
-                    No se encontraron
-                    actividades.
-
+                <td colspan="7" class="empty">
+                    No se encontraron incongruencias con los filtros seleccionados.
                 </td>
-
             </tr>
-
         `;
 
+        return;
     }
 
-}
+    tbody.innerHTML =
+        groups.map(group => {
 
+            const first =
+                group[0];
 
-/* =========================================================
-   FILTROS
-   ========================================================= */
-
-function llenarFiltros(){
-
-    llenarSelect(
-        "agentFilter",
-        unique(
-            actividades.map(
-                a =>
-                    a.usuario
-            )
-        )
-    );
-
-
-    llenarSelect(
-        "gestionFilter",
-        unique(
-            actividades.map(
-                a =>
-                    a.tipoGestion
-            )
-        )
-    );
-
-
-    llenarSelect(
-        "statusFilter",
-        unique(
-            actividades.map(
-                a =>
-                    a.estado
-            )
-        )
-    );
-
-
-    llenarSelect(
-        "typeFilter",
-        unique(
-            actividades.map(
-                a =>
-                    a.tipoCaso
-            )
-        )
-    );
-
-
-    llenarSelect(
-        "repeatAgentFilter",
-        unique(
-            actividades.map(
-                a =>
-                    a.usuario
-            )
-        )
-    );
-
-}
-
-
-function unique(
-    array
-){
-
-    return [
-
-        ...new Set(
-            array.filter(
-                Boolean
-            )
-        )
-
-    ]
-    .sort(
-        (
-            a,
-            b
-        ) =>
-            a.localeCompare(
-                b,
-                "es"
-            )
-    );
-
-}
-
-
-function llenarSelect(
-    id,
-    values
-){
-
-    const select =
-        document.getElementById(
-            id
-        );
-
-
-    while(
-        select.options.length > 1
-    ){
-
-        select.remove(
-            1
-        );
-
-    }
-
-
-    values.forEach(
-        value=>{
-
-            const option =
-                document.createElement(
-                    "option"
+            const sorted =
+                [...group].sort(
+                    (a, b) =>
+                        (
+                            a.registrationDate?.getTime() || 0
+                        ) -
+                        (
+                            b.registrationDate?.getTime() || 0
+                        )
                 );
 
+            const firstDate =
+                sorted[0]?.registrationDate;
 
-            option.value =
-                value;
+            const lastDate =
+                sorted[sorted.length - 1]
+                    ?.registrationDate;
 
+            const changes =
+                [...new Set(
+                    group
+                        .map(row =>
+                            [
+                                row.management,
+                                row.status,
+                                row.type
+                            ]
+                            .filter(Boolean)
+                            .join(" / ")
+                        )
+                        .filter(Boolean)
+                )];
 
-            option.textContent =
-                value;
+            const detail =
+                group
+                    .sort(
+                        (a, b) =>
+                            (
+                                a.registrationDate?.getTime() || 0
+                            ) -
+                            (
+                                b.registrationDate?.getTime() || 0
+                            )
+                    )
+                    .map(row => {
 
+                        return `
+                            <div class="repeat-details">
+                                <strong>${formatDateTime(row.registrationDate)}</strong>
+                                — Gestión: ${escapeHtml(row.management || "Sin gestión")}
+                                — Estado: ${escapeHtml(row.status || "Sin estado")}
+                                — Tipo: ${escapeHtml(row.type || "Sin tipo")}
+                            </div>
+                        `;
 
-            select.appendChild(
-                option
-            );
+                    })
+                    .join("");
 
-        }
-    );
+            return `
+                <tr class="incongruencia">
+
+                    <td class="case-number">
+                        ${escapeHtml(first.caseNumber)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(first.agent)}
+                    </td>
+
+                    <td>
+                        <span class="badge repeat-badge">
+                            ${group.length}
+                        </span>
+                    </td>
+
+                    <td class="datetime">
+                        ${formatDateTime(firstDate)}
+                    </td>
+
+                    <td class="datetime">
+                        ${formatDateTime(lastDate)}
+                    </td>
+
+                    <td>
+                        ${changes
+                            .map(
+                                x =>
+                                    `<div>${escapeHtml(x)}</div>`
+                            )
+                            .join("")
+                        }
+                    </td>
+
+                    <td>
+                        ${detail}
+                    </td>
+
+                </tr>
+            `;
+
+        }).join("");
 
 }
 
 
-/* =========================================================
-   INFORMACIÓN DEL ARCHIVO
-   ========================================================= */
+/* ============================================================
+   RENDER GENERAL
+============================================================ */
 
-function mostrarInfoArchivo(
-    file,
-    conFecha
-){
+function renderAllTables() {
 
-    const info =
-        document.getElementById(
-            "fileInfo"
-        );
+    renderDetailTable();
 
-
-    const mb =
-        (
-            file.size /
-            1024 /
-            1024
-        ).toFixed(2);
-
-
-    const porcentaje =
-        actividades.length
-        ? (
-            conFecha /
-            actividades.length *
-            100
-          ).toFixed(1)
-        : "0";
-
-
-    info.innerHTML = `
-
-        <strong>
-            Archivo:
-        </strong>
-
-        ${escapeHtml(
-            file.name
-        )}
-
-        &nbsp; | &nbsp;
-
-        <strong>
-            Tamaño:
-        </strong>
-
-        ${mb} MB
-
-        &nbsp; | &nbsp;
-
-        <strong>
-            Registros:
-        </strong>
-
-        ${actividades.length}
-
-        &nbsp; | &nbsp;
-
-        <strong>
-            FechaHoraRegistro válida:
-        </strong>
-
-        ${porcentaje}%
-
-    `;
-
-
-    info.style.display =
-        "block";
+    renderInconsistencyTable();
 
 }
 
 
-/* =========================================================
-   STATUS
-   ========================================================= */
+/* ============================================================
+   EVENTOS DE FILTROS
+============================================================ */
 
-function setStatus(
-    message,
-    className
-){
+[
+    "searchInput",
+    "agentFilter",
+    "managementFilter",
+    "statusFilter"
+].forEach(id => {
 
     const element =
-        document.getElementById(
-            "status"
-        );
+        document.getElementById(id);
 
-
-    element.textContent =
-        message;
-
-
-    element.className =
-        className || "";
-
-}
-
-
-/* =========================================================
-   EXPORTAR RESULTADOS
-   ========================================================= */
-
-function exportResults(){
-
-    if(
-        !actividades.length
-    ){
-
-        return;
-
-    }
-
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    /* -----------------------------------------------------
-       HOJA 1 - ACTIVIDADES
-       ----------------------------------------------------- */
-
-    const actividadesExport =
-        actividades.map(
-            actividad=>({
-
-                "Caso":
-                    actividad.caso,
-
-                "Tipo de caso":
-                    actividad.tipoCaso,
-
-                "Estado":
-                    actividad.estado,
-
-                "Fecha":
-                    actividad.fecha,
-
-                "Hora":
-                    actividad.hora,
-
-                "FechaHoraRegistro":
-                    formatDateTime(
-                        actividad
-                        .fechaHoraRegistro
-                    ),
-
-                "Agente":
-                    actividad.usuario,
-
-                "Correo":
-                    actividad.correo,
-
-                "Tipo de gestión":
-                    actividad.tipoGestion,
-
-                "Modificaciones del caso":
-                    casosMap[
-                        actividad.caso
-                    ]
-                    .actividades
-                    .length
-
-            })
-        );
-
-
-    const wsActividades =
-        XLSX.utils.json_to_sheet(
-            actividadesExport
-        );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        wsActividades,
-        "Actividades"
-    );
-
-
-    /* -----------------------------------------------------
-       HOJA 2 - CASOS
-       ----------------------------------------------------- */
-
-    const casosExport =
-        Object.values(
-            casosMap
-        )
-        .map(
-            caso=>{
-
-                const agentes =
-                    [
-                        ...new Set(
-                            caso.actividades.map(
-                                a =>
-                                    a.usuario
-                            )
-                        )
-                    ];
-
-
-                return {
-
-                    "Caso":
-                        caso.caso,
-
-                    "Modificaciones":
-                        caso.actividades.length,
-
-                    "Agentes":
-                        agentes.join(
-                            " | "
-                        ),
-
-                    "Número de agentes":
-                        agentes.length,
-
-                    "Primera modificación":
-                        caso.primeraFecha
-                        ? formatDateTime(
-                            caso.primeraFecha
-                          )
-                        : "",
-
-                    "Última modificación":
-                        caso.ultimaFecha
-                        ? formatDateTime(
-                            caso.ultimaFecha
-                          )
-                        : "",
-
-                    "Tiempo total":
-                        caso.tiempoTotal !== null
-                        ? formatDuration(
-                            caso.tiempoTotal
-                          )
-                        : "Sin dato"
-
-                };
-
-            }
-        );
-
-
-    const wsCasos =
-        XLSX.utils.json_to_sheet(
-            casosExport
-        );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        wsCasos,
-        "Casos"
-    );
-
-
-    /* -----------------------------------------------------
-       HOJA 3 - CASOS REPETIDOS
-       ----------------------------------------------------- */
-
-    const repetidosExport = [];
-
-
-    getRepeatedCases()
-    .forEach(
-        caso=>{
-
-            caso.actividades
-            .forEach(
-                (
-                    actividad,
-                    index
-                )=>{
-
-                    const anterior =
-                        index > 0
-                        ? caso.actividades[
-                            index - 1
-                          ]
-                        : null;
-
-
-                    let tiempoDesdeAnterior =
-                        "";
-
-
-                    if(
-                        anterior
-                    ){
-
-                        const anteriorTime =
-                            getTimestamp(
-                                anterior
-                                .fechaHoraRegistro
-                            );
-
-
-                        const actualTime =
-                            getTimestamp(
-                                actividad
-                                .fechaHoraRegistro
-                            );
-
-
-                        if(
-                            anteriorTime !== null &&
-                            actualTime !== null
-                        ){
-
-                            tiempoDesdeAnterior =
-                                formatDuration(
-                                    actualTime -
-                                    anteriorTime
-                                );
-
-                        }
-
-                    }
-
-
-                    repetidosExport.push({
-
-                        "Caso":
-                            caso.caso,
-
-                        "N° modificación":
-                            index + 1,
-
-                        "FechaHoraRegistro":
-                            formatDateTime(
-                                actividad
-                                .fechaHoraRegistro
-                            ),
-
-                        "Agente":
-                            actividad.usuario,
-
-                        "Correo":
-                            actividad.correo,
-
-                        "Tipo de gestión":
-                            actividad.tipoGestion,
-
-                        "Estado":
-                            actividad.estado,
-
-                        "Tipo de caso":
-                            actividad.tipoCaso,
-
-                        "Tiempo desde modificación anterior":
-                            tiempoDesdeAnterior,
-
-                        "Total modificaciones":
-                            caso.actividades.length,
-
-                        "Tiempo total caso":
-                            caso.tiempoTotal !== null
-                            ? formatDuration(
-                                caso.tiempoTotal
-                              )
-                            : "Sin dato"
-
-                    });
-
-                }
-            );
-
-        }
-    );
-
-
-    const wsRepetidos =
-        XLSX.utils.json_to_sheet(
-            repetidosExport
-        );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        wsRepetidos,
-        "Casos Repetidos"
-    );
-
-
-    /* -----------------------------------------------------
-       HOJA 4 - PRODUCTIVIDAD
-       ----------------------------------------------------- */
-
-    const agentes = {};
-
-
-    actividades.forEach(
-        actividad=>{
-
-            const nombre =
-                actividad.usuario;
-
-
-            if(
-                !agentes[nombre]
-            ){
-
-                agentes[nombre] = {
-
-                    actividades:0,
-
-                    casos:new Set(),
-
-                    repetidos:new Set(),
-
-                    gestiones:{}
-
-                };
-
-            }
-
-
-            agentes[nombre]
-                .actividades++;
-
-
-            agentes[nombre]
-                .casos
-                .add(
-                    actividad.caso
-                );
-
-
-            agentes[nombre]
-                .gestiones[
-                    actividad.tipoGestion
-                ] =
-                (
-                    agentes[nombre]
-                    .gestiones[
-                        actividad.tipoGestion
-                    ] || 0
-                ) + 1;
-
-        }
-    );
-
-
-    getRepeatedCases()
-    .forEach(
-        caso=>{
-
-            const agentesCaso =
-                new Set(
-                    caso.actividades.map(
-                        a =>
-                            a.usuario
-                    )
-                );
-
-
-            agentesCaso.forEach(
-                agente=>{
-
-                    if(
-                        agentes[agente]
-                    ){
-
-                        agentes[
-                            agente
-                        ]
-                        .repetidos
-                        .add(
-                            caso.caso
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-
-    const productividadExport =
-        Object.entries(
-            agentes
-        )
-        .map(
-            (
-                [
-                    agente,
-                    x
-                ]
-            )=>{
-
-                const principal =
-                    Object.entries(
-                        x.gestiones
-                    )
-                    .sort(
-                        (
-                            a,
-                            b
-                        ) =>
-                            b[1] -
-                            a[1]
-                    )[0];
-
-
-                return {
-
-                    "Agente":
-                        agente,
-
-                    "Actividades":
-                        x.actividades,
-
-                    "Casos únicos":
-                        x.casos.size,
-
-                    "Casos repetidos":
-                        x.repetidos.size,
-
-                    "Gestión principal":
-                        principal
-                        ? principal[0]
-                        : ""
-
-                };
-
-            }
-        );
-
-
-    const wsProductividad =
-        XLSX.utils.json_to_sheet(
-            productividadExport
-        );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        wsProductividad,
-        "Productividad"
-    );
-
-
-    /* -----------------------------------------------------
-       DESCARGAR
-       ----------------------------------------------------- */
-
-    XLSX.writeFile(
-        workbook,
-        "Productivity_Operations_Analysis.xlsx"
-    );
-
-}
-
-
-/* =========================================================
-   EVENTOS
-   ========================================================= */
-
-document
-    .getElementById(
-        "fileInput"
-    )
-    .addEventListener(
-        "change",
-        function(){
-
-            if(
-                this.files[0]
-            ){
-
-                processFile();
-
-            }
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "searchInput"
-    )
-    .addEventListener(
+    element.addEventListener(
         "input",
-        renderActivityTable
+        renderDetailTable
     );
+
+    element.addEventListener(
+        "change",
+        renderDetailTable
+    );
+
+});
+
+
+[
+    "incSearch",
+    "incAgentFilter",
+    "incMinRepeat"
+].forEach(id => {
+
+    const element =
+        document.getElementById(id);
+
+    element.addEventListener(
+        "input",
+        renderInconsistencyTable
+    );
+
+    element.addEventListener(
+        "change",
+        renderInconsistencyTable
+    );
+
+});
 
 
 document
     .getElementById(
-        "agentFilter"
+        "clearIncFilters"
     )
     .addEventListener(
-        "change",
-        renderActivityTable
+        "click",
+        () => {
+
+            document.getElementById(
+                "incSearch"
+            ).value = "";
+
+            document.getElementById(
+                "incAgentFilter"
+            ).value = "";
+
+            document.getElementById(
+                "incMinRepeat"
+            ).value = "2";
+
+            renderInconsistencyTable();
+
+        }
     );
 
+
+/* ============================================================
+   TABS
+============================================================ */
 
 document
-    .getElementById(
-        "gestionFilter"
-    )
-    .addEventListener(
-        "change",
-        renderActivityTable
-    );
+    .querySelectorAll(".tab-button")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const target =
+                    button.dataset.tab;
+
+                document
+                    .querySelectorAll(
+                        ".tab-button"
+                    )
+                    .forEach(btn =>
+                        btn.classList.remove(
+                            "active"
+                        )
+                    );
+
+                document
+                    .querySelectorAll(
+                        ".tab"
+                    )
+                    .forEach(tab =>
+                        tab.classList.remove(
+                            "active"
+                        )
+                    );
+
+                button.classList.add(
+                    "active"
+                );
+
+                document
+                    .getElementById(target)
+                    .classList.add(
+                        "active"
+                    );
+
+            }
+        );
+
+    });
 
 
-document
-    .getElementById(
-        "statusFilter"
-    )
-    .addEventListener(
-        "change",
-        renderActivityTable
-    );
+/* ============================================================
+   ESTADO INICIAL
+============================================================ */
 
-
-document
-    .getElementById(
-        "typeFilter"
-    )
-    .addEventListener(
-        "change",
-        renderActivityTable
-    );
-
-
-document
-    .getElementById(
-        "repeatAgentFilter"
-    )
-    .addEventListener(
-        "change",
-        renderRepeatCases
-    );
-
-
-document
-    .getElementById(
-        "repeatMinFilter"
-    )
-    .addEventListener(
-        "change",
-        renderRepeatCases
-    );
+showStatus(
+    "Selecciona el archivo Excel de la operación para comenzar.",
+    "info"
+);
 
 </script>
 
 </body>
-
 </html>
