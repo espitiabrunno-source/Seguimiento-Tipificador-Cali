@@ -98,27 +98,82 @@ function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function setStatus(msg,cls){$('status').textContent=msg;$('status').className=cls||''}
 function excelDateToParts(v){
-  if(v instanceof Date&&!isNaN(v))return{y:v.getFullYear(),m:v.getMonth()+1,d:v.getDate(),hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
-  if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);if(d)return{y:d.y,m:d.m,d:d.d,hh:d.H||0,mi:d.M||0,ss:Math.floor(d.S||0)}}
-  return null
+  if(v instanceof Date&&!isNaN(v)){
+    return {y:v.getFullYear(),m:v.getMonth()+1,d:v.getDate(),hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
+  }
+  if(typeof v==='number'){
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d)return {y:d.y,m:d.m,d:d.d,hh:d.H||0,mi:d.M||0,ss:Math.floor(d.S||0)};
+  }
+  return null;
+}
+
+// IMPORTANTE: el CSV de la operación usa DD/MM/YY.
+// No se deja que JavaScript interprete esas fechas automáticamente porque
+// puede asumir MM/DD/YY o desplazar el año. Se interpreta manualmente.
+function parseDMYParts(value){
+  if(value===null||value===undefined||value==='')return null;
+  const s=String(value).trim().replace(/^['"]|['"]$/g,'').trim();
+  let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  if(!m)return null;
+  let dd=Number(m[1]),mm=Number(m[2]),yy=Number(m[3]);
+  // 00-49 => 2000-2049; 50-99 => 1950-1999.
+  // Para este reporte, 26 significa 2026.
+  if(yy<100)yy += yy<=49 ? 2000 : 1900;
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return {y:yy,m:mm,d:dd};
+}
+
+function makeLocalDate(parts,time){
+  if(!parts)return null;
+  const hh=time?.hh||0, mi=time?.mi||0, ss=time?.ss||0;
+  const d=new Date(parts.y,parts.m-1,parts.d,hh,mi,ss,0);
+  // Evita aceptar fechas imposibles como 31/02.
+  if(d.getFullYear()!==parts.y||d.getMonth()!==parts.m-1||d.getDate()!==parts.d)return null;
+  return d;
 }
 function parseDateOnly(v){
-  const p=excelDateToParts(v);if(p)return new Date(p.y,p.m-1,p.d);
-  const s=String(v??'').trim();let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
-  m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);return null
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:0,mi:0,ss:0});
+  const dmy=parseDMYParts(v);
+  if(dmy)return makeLocalDate(dmy,{hh:0,mi:0,ss:0});
+  const s=String(v??'').trim();
+  let m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(m)return makeLocalDate({y:+m[1],m:+m[2],d:+m[3]},{hh:0,mi:0,ss:0});
+  return null;
 }
 function parseTime(v){
   if(v instanceof Date&&!isNaN(v))return{hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
-  if(typeof v==='number'){const total=Math.round((v%1)*86400);return{hh:Math.floor(total/3600)%24,mi:Math.floor(total/60)%60,ss:total%60}}
-  const s=String(v??'').trim();let m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);if(!m)return null;
-  let hh=+m[1],mi=+m[2],ss=+(m[3]||0);if(m[4]){if(/pm/i.test(m[4])&&hh!==12)hh+=12;if(/am/i.test(m[4])&&hh===12)hh=0}return{hh,mi,ss}
+  if(typeof v==='number'){
+    const total=Math.round((v%1)*86400);
+    return{hh:Math.floor(total/3600)%24,mi:Math.floor(total/60)%60,ss:total%60};
+  }
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  let m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+  let hh=+m[1],mi=+m[2],ss=+(m[3]||0);
+  if(m[4]){if(/pm/i.test(m[4])&&hh!==12)hh+=12;if(/am/i.test(m[4])&&hh===12)hh=0;}
+  return{hh,mi,ss};
 }
 function parseDateTime(v){
-  const p=excelDateToParts(v);if(p)return new Date(p.y,p.m-1,p.d,p.hh,p.mi,p.ss);
-  const s=String(v??'').trim();let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:\s+|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);if(!m)return null;
-  let hh=+m[4],mi=+m[5],ss=+(m[6]||0);if(m[7]){if(/pm/i.test(m[7])&&hh!==12)hh+=12;if(/am/i.test(m[7])&&hh===12)hh=0}return new Date(+m[3],+m[2]-1,+m[1],hh,mi,ss)
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:p.hh,mi:p.mi,ss:p.ss});
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  // DD/MM/YY HH:MM:SS o DD/MM/YYYY HH:MM:SS, con AM/PM opcional.
+  let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})(?:\s+|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+  let yy=+m[3]; if(yy<100)yy+=yy<=49?2000:1900;
+  let hh=+m[4],mi=+m[5],ss=+(m[6]||0);
+  if(m[7]){if(/pm/i.test(m[7])&&hh!==12)hh+=12;if(/am/i.test(m[7])&&hh===12)hh=0;}
+  return makeLocalDate({y:yy,m:+m[2],d:+m[1]},{hh,mi,ss});
 }
-function combineDateTime(dateVal,timeVal,fullVal){const full=parseDateTime(fullVal);if(full)return full;const d=parseDateOnly(dateVal),t=parseTime(timeVal);if(d&&t){d.setHours(t.hh,t.mi,t.ss,0);return d}return d}
+function combineDateTime(dateVal,timeVal,fullVal){
+  const full=parseDateTime(fullVal);
+  if(full)return full;
+  const d=parseDateOnly(dateVal),t=parseTime(timeVal);
+  if(d&&t){d.setHours(t.hh,t.mi,t.ss,0);return d}
+  return d;
+}
 function fmtDate(d){return d?`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`:'—'}
 function fmtTime(d){return d?`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`:'—'}
 function fmtDateTime(d){return d?`${fmtDate(d)} ${fmtTime(d)}`:'—'}
@@ -147,7 +202,28 @@ function detectHeaders(matrix){
 }
 function processFile(){
   const file=$('fileInput').files[0];if(!file){setStatus('Selecciona un archivo primero.','err-msg');return}setStatus('Procesando archivo...','info-msg');
-  const reader=new FileReader();reader.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true,raw:true});const sheet=wb.Sheets[wb.SheetNames[0]];const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});if(!matrix.length)throw new Error('El archivo está vacío.');analizar(matrix,file.name)}catch(err){console.error(err);setStatus('❌ No se pudo leer el archivo: '+err.message,'err-msg')}};reader.onerror=()=>setStatus('❌ Error leyendo el archivo.','err-msg');reader.readAsArrayBuffer(file)
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const isCsv=/\.csv$/i.test(file.name);
+      let wb;
+      if(isCsv){
+        // El archivo operativo se descarga como CSV separado por comas.
+        // Se lee como texto para evitar que el navegador/Excel intente
+        // reinterpretar las fechas DD/MM/YY.
+        const text=new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+        wb=XLSX.read(text,{type:'string',raw:true,cellDates:false,FS:','});
+      }else{
+        wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:false,raw:true});
+      }
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
+      if(!matrix.length)throw new Error('El archivo está vacío.');
+      analizar(matrix,file.name);
+    }catch(err){console.error(err);setStatus('❌ No se pudo leer el archivo: '+err.message,'err-msg')}
+  };
+  reader.onerror=()=>setStatus('❌ Error leyendo el archivo.','err-msg');
+  reader.readAsArrayBuffer(file)
 }
 function analizar(matrix,fileName){
   const d=detectHeaders(matrix);if(!d){setStatus('❌ No se pudo identificar la fila de encabezados.','err-msg');return}
@@ -159,7 +235,7 @@ function analizar(matrix,fileName){
     let agente=String(row[cols.usuario]??'').trim();if(!agente&&cols.nuevo>=0)agente=String(row[cols.nuevo]??'').trim();if(!agente)agente='Sin asignar';
     out.push({caso,tipo,estado,fecha:parseDateOnly(fecha)||dt,registro:dt,agente,correo:cols.correo>=0?String(row[cols.correo]??'').trim():'',gestion:cols.gestion>=0?String(row[cols.gestion]??'').trim():''})
   }
-  registros=out;if(!registros.length){setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');return}fillFilters();renderAll();$('btnActualizar').disabled=false;$('btnExportar').disabled=false;setStatus(`✅ ${registros.length} registros procesados desde "${fileName}".${ignored?` ${ignored} filas ignoradas.`:''}`,'ok-msg')
+  registros=out;if(!registros.length){setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');return}fillFilters();renderAll();$('btnActualizar').disabled=false;$('btnExportar').disabled=false;setStatus(`✅ ${registros.length} registros procesados desde "${fileName}". Fechas interpretadas como DD/MM/YY.${ignored?` ${ignored} filas ignoradas.`:''}`,'ok-msg')
 }
 function uniqueCases(){return new Set(registros.map(r=>norm(r.caso))).size}function uniqueAgents(){return new Set(registros.map(r=>norm(r.agente))).size}
 function renderAll(){renderCards();renderCharts();renderDetail();renderAgents();renderDuplicates();renderCases();$('lastUpdate').textContent='Última actualización: '+new Date().toLocaleString('es-CO')}
