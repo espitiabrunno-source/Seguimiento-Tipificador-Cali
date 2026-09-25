@@ -26,6 +26,12 @@ table{width:100%;border-collapse:collapse;background:#fff}th{background:#002b5c;
 td{padding:9px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;white-space:nowrap}
 tr:hover td{background:#f7faff}.critico td{background:#ffe5e5}.alerta td{background:#fff6d6}.ok td{background:#e7f8ec}
 .search{width:100%;margin-bottom:10px}.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.productivity-filters{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr auto;gap:10px;align-items:end;background:#f7f9fc;border:1px solid #e1e7f0;padding:12px;border-radius:10px;margin-bottom:14px}
+.filter-field{display:flex;flex-direction:column;gap:5px}.filter-field label{font-size:12px;font-weight:700;color:#475467}.filter-field input,.filter-field select{width:100%}
+.dashboard-note{padding:10px 12px;background:#eef6ff;border-left:4px solid #0066ff;border-radius:7px;color:#334155;font-size:13px;margin-bottom:14px}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#e8f1ff;color:#174ea6;font-weight:700;font-size:12px}
+.empty{padding:24px;text-align:center;color:#667085}
+@media(max-width:1100px){.productivity-filters{grid-template-columns:1fr 1fr}.grid2,.filters{grid-template-columns:1fr}}
 @media(max-width:900px){.grid2,.filters{grid-template-columns:1fr}body{padding:10px}.chart-box{height:280px}}
 </style>
 </head>
@@ -50,6 +56,40 @@ tr:hover td{background:#f7faff}.critico td{background:#ffe5e5}.alerta td{backgro
   <div class="card"><h3>&gt; 1 hora</h3><div class="value" id="mayor1h">0</div></div>
   <div class="card"><h3>&gt; 4 horas</h3><div class="value" id="mayor4h">0</div></div>
   <div class="card"><h3>Incongruencias</h3><div class="value" id="incongruencias">0</div></div>
+</div>
+<div class="section">
+  <h2>🎯 Productividad diaria: visión general y por agente</h2>
+  <div class="dashboard-note">Usa los filtros para pasar de una visión general a una vista específica. Selecciona un agente para ver cuántos registros y casos únicos realiza día por día. Si dejas "Todos los agentes", la gráfica representa toda la operación.</div>
+  <div class="productivity-filters">
+    <div class="filter-field"><label for="prodAgentFilter">Agente</label><select id="prodAgentFilter"><option value="">Todos los agentes</option></select></div>
+    <div class="filter-field"><label for="prodFrom">Desde</label><input type="date" id="prodFrom"></div>
+    <div class="filter-field"><label for="prodTo">Hasta</label><input type="date" id="prodTo"></div>
+    <div class="filter-field"><label for="prodGestionFilter">Tipo de gestión</label><select id="prodGestionFilter"><option value="">Todas las gestiones</option></select></div>
+    <button id="btnLimpiarProd" class="secondary">Limpiar filtros</button>
+  </div>
+  <div class="cards" style="margin-top:0">
+    <div class="card"><h3>Registros filtrados</h3><div class="value" id="prodRegistros">0</div></div>
+    <div class="card"><h3>Casos únicos filtrados</h3><div class="value" id="prodCasos">0</div></div>
+    <div class="card"><h3>Días con actividad</h3><div class="value" id="prodDias">0</div></div>
+    <div class="card"><h3>Promedio registros/día</h3><div class="value" id="prodPromedioDia">0</div></div>
+    <div class="card"><h3>Gestión con más registros</h3><div class="value" id="prodTopGestion" style="font-size:18px">—</div></div>
+  </div>
+  <div class="grid2">
+    <div><h3>Productividad diaria del filtro seleccionado</h3><div class="chart-box"><canvas id="chartProdDiaria"></canvas></div></div>
+    <div><h3>Productividad por agente</h3><div class="chart-box"><canvas id="chartProdAgentes"></canvas></div></div>
+    <div><h3>Registros por tipo de gestión</h3><div class="chart-box"><canvas id="chartProdGestion"></canvas></div></div>
+    <div><h3>Casos únicos por día</h3><div class="chart-box"><canvas id="chartProdCasosDia"></canvas></div></div>
+  </div>
+</div>
+<div class="section">
+  <h2>👥 Detalle diario por agente</h2>
+  <p class="hint" style="margin-bottom:10px">Permite identificar día a día cuántos registros y casos únicos realizó cada persona y cuál fue su gestión principal.</p>
+  <div class="table-wrap"><table id="dailyAgentTable"><thead><tr><th>Fecha</th><th>Agente</th><th>Registros</th><th>Casos únicos</th><th>Gestiones diferentes</th><th>Gestión principal</th><th>% del día</th></tr></thead><tbody></tbody></table></div>
+</div>
+<div class="section">
+  <h2>🧩 ¿En qué tipo de gestión estamos concentrando los registros?</h2>
+  <p class="hint" style="margin-bottom:10px">Se cuentan todos los registros del archivo para identificar dónde se concentra el volumen operativo.</p>
+  <div class="table-wrap"><table id="gestionTable"><thead><tr><th>Posición</th><th>Tipo de gestión</th><th>Registros</th><th>% del total</th><th>Casos únicos</th><th>Agentes</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div class="section">
   <h2>📈 Tableros gerenciales</h2>
@@ -93,10 +133,6 @@ tr:hover td{background:#f7faff}.critico td{background:#ffe5e5}.alerta td{backgro
 </div>
 <script>
 let registros=[],charts={};
-// Formato de fecha detectado automáticamente para el archivo cargado:
-// 'MDY' = mes/día/año (ej. 9/25/2026), 'DMY' = día/mes/año (ej. 25/9/2026).
-// Se recalcula en cada análisis; nunca se asume un único formato fijo.
-let dateFormat='MDY';
 const $=id=>document.getElementById(id);
 function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -106,72 +142,26 @@ function excelDateToParts(v){
     return {y:v.getFullYear(),m:v.getMonth()+1,d:v.getDate(),hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
   }
   if(typeof v==='number'){
-    // Si el número no tiene parte entera (ej. 0.3125 = 07:30:00), es SOLO
-    // una hora, no una fecha real. Dejar que parse_date_code lo procese
-    // aquí generaba fechas fantasma en 1899/1900 ("años que no tiene
-    // registro"). En ese caso se devuelve null y la hora se toma aparte
-    // con parseTime().
-    if(Math.abs(v)<1)return null;
     const d=XLSX.SSF.parse_date_code(v);
     if(d)return {y:d.y,m:d.m,d:d.d,hh:d.H||0,mi:d.M||0,ss:Math.floor(d.S||0)};
   }
   return null;
 }
 
-// IMPORTANTE: no se asume un único formato fijo (ni DD/MM/AAAA ni
-// MM/DD/AAAA), porque cada plataforma exporta distinto y asumir mal
-// producía fechas/años inexistentes. En su lugar, detectDateFormat()
-// analiza una muestra real de la columna de fecha ANTES de procesar filas:
-// - Si el primer número de una fecha es >12, ese valor solo puede ser el
-//   día  => el archivo está en DD/MM/AAAA (inequívoco).
-// - Si el segundo número es >12, ese valor solo puede ser el día
-//   => el archivo está en MM/DD/AAAA (inequívoco).
-// - Si ambos son <=12 en toda la muestra (ambiguo), se usa MM/DD/AAAA por
-//   defecto, que es el formato de esta plataforma (ej. 9/25/2026).
-function sampleDateNumberPairs(matrix,startIdx,col){
-  const out=[];
-  if(col<0)return out;
-  for(let i=startIdx;i<matrix.length&&out.length<120;i++){
-    const v=matrix[i]?.[col];
-    if(v===undefined||v===null||v==='')continue;
-    if(typeof v==='number')continue; // los seriales numéricos de Excel no son ambiguos
-    const s=String(v).trim().replace(/^['"]|['"]$/g,'').trim();
-    const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})/);
-    if(m)out.push([Number(m[1]),Number(m[2])]);
-  }
-  return out;
-}
-function detectDateFormat(matrix,startIdx,cols){
-  const col=cols.fecha>=0?cols.fecha:cols.fechaHora;
-  const pairs=sampleDateNumberPairs(matrix,startIdx,col);
-  if(!pairs.length)return 'MDY';
-  let forcedDMY=0,forcedMDY=0;
-  pairs.forEach(([a,b])=>{
-    if(a>12&&b<=12)forcedDMY++;
-    else if(b>12&&a<=12)forcedMDY++;
-  });
-  if(forcedMDY>0&&forcedDMY===0)return 'MDY';
-  if(forcedDMY>0&&forcedMDY===0)return 'DMY';
-  if(forcedDMY>0&&forcedMDY>0)return forcedMDY>=forcedDMY?'MDY':'DMY'; // formato mixto: se usa el mayoritario
-  return 'MDY'; // totalmente ambiguo (día y mes <=12 siempre): formato de esta plataforma
-}
+// IMPORTANTE: el CSV de la operación usa DD/MM/YY.
+// No se deja que JavaScript interprete esas fechas automáticamente porque
+// puede asumir MM/DD/YY o desplazar el año. Se interpreta manualmente.
 function parseDMYParts(value){
   if(value===null||value===undefined||value==='')return null;
   const s=String(value).trim().replace(/^['"]|['"]$/g,'').trim();
-  let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
   if(!m)return null;
-  let n1=Number(m[1]),n2=Number(m[2]),yy=Number(m[3]);
-  let dd,mm;
-  if(n1>12){dd=n1;mm=n2}          // inequívoco: solo puede ser día/mes
-  else if(n2>12){mm=n1;dd=n2}     // inequívoco: solo puede ser mes/día
-  else if(dateFormat==='DMY'){dd=n1;mm=n2}
-  else {mm=n1;dd=n2}
-  // 00-49 => 2000-2049; 50-99 => 1950-1999.
-  if(yy<100)yy += yy<=49 ? 2000 : 1900;
+  const dd=Number(m[1]),mm=Number(m[2]);
+  let yy=Number(m[3]);
+  if(yy<100)yy+=yy<=49?2000:1900;
   if(mm<1||mm>12||dd<1||dd>31)return null;
   return {y:yy,m:mm,d:dd};
 }
-
 function makeLocalDate(parts,time){
   if(!parts)return null;
   const hh=time?.hh||0, mi=time?.mi||0, ss=time?.ss||0;
@@ -207,20 +197,13 @@ function parseDateTime(v){
   const p=excelDateToParts(v);
   if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:p.hh,mi:p.mi,ss:p.ss});
   const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
-  // Fecha+hora en un solo campo (DD/MM/AAAA o MM/DD/AAAA, según se detecte),
-  // con AM/PM opcional.
+  // DD/MM/YY HH:MM:SS o DD/MM/YYYY HH:MM:SS, con AM/PM opcional.
   let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})(?:\s+|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
   if(!m)return null;
-  let n1=+m[1],n2=+m[2],yy=+m[3]; if(yy<100)yy+=yy<=49?2000:1900;
-  let dd,mm;
-  if(n1>12){dd=n1;mm=n2}
-  else if(n2>12){mm=n1;dd=n2}
-  else if(dateFormat==='DMY'){dd=n1;mm=n2}
-  else {mm=n1;dd=n2}
+  let yy=+m[3]; if(yy<100)yy+=yy<=49?2000:1900;
   let hh=+m[4],mi=+m[5],ss=+(m[6]||0);
   if(m[7]){if(/pm/i.test(m[7])&&hh!==12)hh+=12;if(/am/i.test(m[7])&&hh===12)hh=0;}
-  if(mm<1||mm>12||dd<1||dd>31)return null;
-  return makeLocalDate({y:yy,m:mm,d:dd},{hh,mi,ss});
+  return makeLocalDate({y:yy,m:+m[2],d:+m[1]},{hh,mi,ss});
 }
 function combineDateTime(dateVal,timeVal,fullVal){
   const full=parseDateTime(fullVal);
@@ -283,7 +266,6 @@ function processFile(){
 function analizar(matrix,fileName){
   const d=detectHeaders(matrix);if(!d){setStatus('❌ No se pudo identificar la fila de encabezados.','err-msg');return}
   const{headerRowIdx:c,cols}=d;if(cols.caso<0|| (cols.fecha<0&&cols.fechaHora<0)){setStatus('❌ Faltan columnas mínimas: identificador de caso y Fecha o FechaHoraRegistro.','err-msg');return}
-  dateFormat=detectDateFormat(matrix,c+1,cols);
   const out=[];let ignored=0,currentCase='';
   for(let i=c+1;i<matrix.length;i++){
     const row=matrix[i]||[];let caso=String(row[cols.caso]??'').trim();if(norm(caso)==='total')break;if(norm(caso)==='subtotal')continue;if(!caso&&cols.casoAlt>=0)caso=String(row[cols.casoAlt]??'').trim();if(caso)currentCase=caso;caso=currentCase;if(!caso){ignored++;continue}
@@ -291,10 +273,32 @@ function analizar(matrix,fileName){
     let agente=String(row[cols.usuario]??'').trim();if(!agente&&cols.nuevo>=0)agente=String(row[cols.nuevo]??'').trim();if(!agente)agente='Sin asignar';
     out.push({caso,tipo,estado,fecha:parseDateOnly(fecha)||dt,registro:dt,agente,correo:cols.correo>=0?String(row[cols.correo]??'').trim():'',gestion:cols.gestion>=0?String(row[cols.gestion]??'').trim():''})
   }
-  registros=out;if(!registros.length){setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');return}fillFilters();renderAll();$('btnActualizar').disabled=false;$('btnExportar').disabled=false;setStatus(`✅ ${registros.length} registros procesados desde "${fileName}". Formato de fecha detectado: ${dateFormat==='DMY'?'DD/MM/AAAA':'MM/DD/AAAA'}.${ignored?` ${ignored} filas ignoradas.`:''}`,'ok-msg')
+  registros=out;if(!registros.length){setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');return}fillFilters();fillProductivityFilters();renderAll();$('btnActualizar').disabled=false;$('btnExportar').disabled=false;setStatus(`✅ ${registros.length} registros procesados desde "${fileName}". Fechas interpretadas como DD/MM/YY.${ignored?` ${ignored} filas ignoradas.`:''}`,'ok-msg')
 }
 function uniqueCases(){return new Set(registros.map(r=>norm(r.caso))).size}function uniqueAgents(){return new Set(registros.map(r=>norm(r.agente))).size}
-function renderAll(){renderCards();renderCharts();renderDetail();renderAgents();renderDuplicates();renderCases();$('lastUpdate').textContent='Última actualización: '+new Date().toLocaleString('es-CO')}
+
+function fillSelect(id,values,label){const el=$(id),old=el.value;el.innerHTML=`<option value="">${label}</option>`;[...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es')).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});if([...el.options].some(o=>o.value===old))el.value=old}
+function fillProductivityFilters(){fillSelect('prodAgentFilter',registros.map(r=>r.agente),'Todos los agentes');fillSelect('prodGestionFilter',registros.map(r=>r.gestion),'Todas las gestiones');if(registros.length){const times=registros.map(r=>r.registro.getTime()).sort((a,b)=>a-b);$('prodFrom').value=dateInputValue(new Date(times[0]));$('prodTo').value=dateInputValue(new Date(times[times.length-1]));}}
+function dateInputValue(d){return d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:''}
+function getProductivityFiltered(){const agent=$('prodAgentFilter').value,gestion=$('prodGestionFilter').value,from=$('prodFrom').value,to=$('prodTo').value;return registros.filter(r=>{if(agent&&r.agente!==agent)return false;if(gestion&&r.gestion!==gestion)return false;const k=dateKey(r.registro);if(from&&k<from)return false;if(to&&k>to)return false;return true})}
+function resetProductivityFilters(){ $('prodAgentFilter').value='';$('prodGestionFilter').value='';if(registros.length){const t=registros.map(r=>r.registro.getTime()).sort((a,b)=>a-b);$('prodFrom').value=dateInputValue(new Date(t[0]));$('prodTo').value=dateInputValue(new Date(t[t.length-1]));}renderProductivityDashboard();}
+function renderProductivityDashboard(){
+ const data=getProductivityFiltered(),byDay={},byAgent={},byGestion={},casesByDay={};
+ data.forEach(r=>{const dk=dateKey(r.registro),ag=r.agente||'Sin asignar',ge=r.gestion||'Sin gestión';byDay[dk]=(byDay[dk]||0)+1;byAgent[ag]=(byAgent[ag]||0)+1;byGestion[ge]=(byGestion[ge]||0)+1;if(!casesByDay[dk])casesByDay[dk]=new Set();casesByDay[dk].add(norm(r.caso));});
+ const days=Object.keys(byDay).sort(),agents=Object.entries(byAgent).sort((a,b)=>b[1]-a[1]),gestions=Object.entries(byGestion).sort((a,b)=>b[1]-a[1]);
+ $('prodRegistros').textContent=data.length;$('prodCasos').textContent=new Set(data.map(r=>norm(r.caso))).size;$('prodDias').textContent=days.length;$('prodPromedioDia').textContent=days.length?(data.length/days.length).toFixed(1):'0';$('prodTopGestion').textContent=gestions.length?gestions[0][0]:'—';
+ makeChart('chartProdDiaria','line',days.map(dateKeyToDisplay),days.map(k=>byDay[k]),'Registros por día');
+ makeChart('chartProdAgentes','bar',agents.map(x=>x[0]),agents.map(x=>x[1]),'Registros');
+ makeChart('chartProdGestion','bar',gestions.map(x=>x[0]),gestions.map(x=>x[1]),'Registros');
+ makeChart('chartProdCasosDia','line',days.map(dateKeyToDisplay),days.map(k=>casesByDay[k]?.size||0),'Casos únicos');
+ renderDailyAgentTable(data);renderGestionTable(data);
+}
+function renderDailyAgentTable(data){const tb=document.querySelector('#dailyAgentTable tbody');tb.innerHTML='';if(!data.length){tb.innerHTML='<tr><td colspan="7" class="empty">No hay registros para los filtros seleccionados.</td></tr>';return;}const map={},totalByDay={};data.forEach(r=>{const dk=dateKey(r.registro),ag=r.agente||'Sin asignar',key=dk+'||'+ag;if(!map[key])map[key]={date:dk,agent:ag,rows:0,cases:new Set(),gestions:{}};map[key].rows++;map[key].cases.add(norm(r.caso));const ge=r.gestion||'Sin gestión';map[key].gestions[ge]=(map[key].gestions[ge]||0)+1;totalByDay[dk]=(totalByDay[dk]||0)+1;});Object.values(map).sort((a,b)=>a.date.localeCompare(b.date)||a.agent.localeCompare(b.agent,'es')).forEach(x=>{const top=Object.entries(x.gestions).sort((a,b)=>b[1]-a[1])[0],pct=totalByDay[x.date]?x.rows/totalByDay[x.date]*100:0;tb.innerHTML+=`<tr><td><b>${dateKeyToDisplay(x.date)}</b></td><td>${esc(x.agent)}</td><td>${x.rows}</td><td>${x.cases.size}</td><td>${Object.keys(x.gestions).length}</td><td>${esc(top?top[0]:'—')} ${top?`<span class="badge">${top[1]}</span>`:''}</td><td>${pct.toFixed(1)}%</td></tr>`;});}
+function renderGestionTable(data){const tb=document.querySelector('#gestionTable tbody');tb.innerHTML='';if(!data.length){tb.innerHTML='<tr><td colspan="6" class="empty">No hay registros para los filtros seleccionados.</td></tr>';return;}const map={};data.forEach(r=>{const g=r.gestion||'Sin gestión';if(!map[g])map[g]={rows:0,cases:new Set(),agents:new Set()};map[g].rows++;map[g].cases.add(norm(r.caso));map[g].agents.add(norm(r.agente));});Object.entries(map).sort((a,b)=>b[1].rows-a[1].rows).forEach(([g,x],i)=>{const pct=data.length?x.rows/data.length*100:0;tb.innerHTML+=`<tr><td>${i+1}</td><td><b>${esc(g)}</b></td><td>${x.rows}</td><td>${pct.toFixed(1)}%</td><td>${x.cases.size}</td><td>${x.agents.size}</td></tr>`;});}
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function dateKeyToDisplay(k){const[y,m,d]=k.split('-');return `${d}/${m}/${y.slice(-2)}`}
+
+function renderAll(){renderCards();renderCharts();renderProductivityDashboard();renderDetail();renderAgents();renderDuplicates();renderCases();$('lastUpdate').textContent='Última actualización: '+new Date().toLocaleString('es-CO')}
 function renderCards(){const avg=registros.length?registros.reduce((s,r)=>s+elapsed(r.registro),0)/registros.length:0;$('totalRegistros').textContent=registros.length;$('casosUnicos').textContent=uniqueCases();$('totalAgentes').textContent=uniqueAgents();$('promedio').textContent=duration(avg);$('mayor1h').textContent=registros.filter(r=>elapsed(r.registro)>3600).length;$('mayor4h').textContent=registros.filter(r=>elapsed(r.registro)>14400).length;$('incongruencias').textContent=countDuplicateGroups()}
 function groupBy(fn){const m={};registros.forEach(r=>{const k=fn(r);m[k]=(m[k]||0)+1});return m}
 function makeChart(id,type,labels,data,label){if(charts[id])charts[id].destroy();charts[id]=new Chart($(id),{type,data:{labels,datasets:[{label,data,borderWidth:2,backgroundColor:'rgba(54,162,235,.45)',borderColor:'rgba(54,162,235,1)',tension:.25}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}})}
@@ -313,7 +317,7 @@ function countDuplicateGroups(){return duplicateGroups().length}
 function renderDuplicates(){const tb=document.querySelector('#dupTable tbody');tb.innerHTML='';duplicateGroups().forEach(arr=>{arr.sort((a,b)=>a.registro-b.registro);const cases=[...new Set(arr.map(r=>r.gestion).filter(Boolean))].join(', ')||'—';tb.innerHTML+=`<tr><td><b>${esc(arr[0].caso)}</b></td><td>${esc(arr[0].agente)}</td><td><b>${arr.length}</b></td><td>${esc(cases)}</td><td>${fmtDateTime(arr[0].registro)}</td><td>${fmtDateTime(arr[arr.length-1].registro)}</td></tr>`})}
 function renderCases(){const m={};registros.forEach(r=>{const k=norm(r.caso);if(!m[k])m[k]=[];m[k].push(r)});Object.values(m).forEach(a=>a.sort((x,y)=>y.registro-x.registro));const tb=document.querySelector('#caseTable tbody');tb.innerHTML='';Object.values(m).sort((a,b)=>b[0].registro-a[0].registro).forEach(arr=>{const r=arr[0];tb.innerHTML+=`<tr><td><b>${esc(r.caso)}</b></td><td>${esc(r.agente)}</td><td>${esc(r.gestion||'—')}</td><td>${fmtDateTime(r.registro)}</td><td>${arr.length}</td><td>${duration(elapsed(r.registro))}</td></tr>`})}
 function exportExcel(){if(!registros.length)return;const rows=registros.map(r=>({'Caso':r.caso,'Tipo de caso':r.tipo,'Estado':r.estado,'Fecha':fmtDate(r.fecha),'Hora':fmtTime(r.registro),'Fecha/hora registro':fmtDateTime(r.registro),'Agente':r.agente,'Correo':r.correo,'Tipo de gestión':r.gestion,'Tiempo transcurrido':duration(elapsed(r.registro))}));const ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Detalle');XLSX.writeFile(wb,'Productividad_Dashboard_Resultado.xlsx')}
-$('btnAnalizar').addEventListener('click',processFile);$('fileInput').addEventListener('change',()=>{if($('fileInput').files[0])processFile()});$('btnActualizar').addEventListener('click',renderAll);$('btnExportar').addEventListener('click',exportExcel);['searchInput','agentFilter','gestionFilter','estadoFilter'].forEach(id=>$(id).addEventListener('input',renderDetail));setInterval(()=>{if(registros.length)renderAll()},60000);
+$('btnAnalizar').addEventListener('click',processFile);$('fileInput').addEventListener('change',()=>{if($('fileInput').files[0])processFile()});$('btnActualizar').addEventListener('click',renderAll);$('btnExportar').addEventListener('click',exportExcel);['searchInput','agentFilter','gestionFilter','estadoFilter'].forEach(id=>{ $(id).addEventListener('input',renderDetail);$(id).addEventListener('change',renderDetail)});['prodAgentFilter','prodGestionFilter','prodFrom','prodTo'].forEach(id=>{ $(id).addEventListener('input',renderProductivityDashboard);$(id).addEventListener('change',renderProductivityDashboard)});$('btnLimpiarProd').addEventListener('click',resetProductivityFilters);setInterval(()=>{if(registros.length)renderAll()},60000);
 </script>
 </body>
 </html>
