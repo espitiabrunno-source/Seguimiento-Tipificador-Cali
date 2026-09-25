@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Aging & Productivity Dashboard</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
+body{background:#f4f7fb;color:#172033;padding:18px}
+.header{background:#002b5c;color:#fff;padding:22px;border-radius:14px;margin-bottom:16px}
+.header h1{font-size:25px;margin-bottom:6px}.header p{opacity:.9}
+.controls{background:#fff;padding:14px;border-radius:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 7px #0001}
+input[type=file],input,select{border:1px solid #ccd5e2;border-radius:8px;padding:10px;background:#fff}
+button{border:0;border-radius:8px;padding:10px 16px;background:#0066ff;color:#fff;font-weight:700;cursor:pointer}
+button:disabled{background:#aebbd0;cursor:not-allowed}.hint{font-size:12px;color:#667085}
+#status{margin:10px 0;min-height:20px;font-weight:700}.ok-msg{color:#087f3d}.err-msg{color:#c62828}.info-msg{color:#0066cc}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.card,.section{background:#fff;border-radius:14px;box-shadow:0 2px 8px #00000010}
+.card{padding:17px}.card h3{font-size:13px;color:#667085;margin-bottom:8px}.value{font-size:28px;font-weight:800}
+.section{padding:16px;margin-top:16px}.section h2{font-size:18px;margin-bottom:12px;color:#17365d}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.chart-box{height:330px;position:relative}
+.table-wrap{max-height:520px;overflow:auto;border:1px solid #e3e8ef;border-radius:10px}
+table{width:100%;border-collapse:collapse;background:#fff}th{background:#002b5c;color:#fff;padding:11px;text-align:left;position:sticky;top:0;z-index:2;font-size:13px}
+td{padding:9px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;white-space:nowrap}
+tr:hover td{background:#f7faff}.critico td{background:#ffe5e5}.alerta td{background:#fff6d6}.ok td{background:#e7f8ec}
+.search{width:100%;margin-bottom:10px}.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:900px){.grid2,.filters{grid-template-columns:1fr}body{padding:10px}.chart-box{height:280px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📊 Case Aging & Productivity Dashboard</h1>
+  <p>Lectura de CSV / Excel, tiempos operativos, productividad, detalle por agente e incongruencias.</p>
+</div>
+<div class="controls">
+  <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+  <button id="btnAnalizar">Analizar archivo</button>
+  <button id="btnActualizar" disabled>🔄 Recalcular</button>
+  <button id="btnExportar" disabled>⬇️ Exportar resultado</button>
+  <span class="hint">La primera fila puede ser directamente la fila de encabezados.</span>
+</div>
+<div id="status"></div><div id="lastUpdate" class="hint"></div>
+<div class="cards">
+  <div class="card"><h3>Registros</h3><div class="value" id="totalRegistros">0</div></div>
+  <div class="card"><h3>Casos únicos</h3><div class="value" id="casosUnicos">0</div></div>
+  <div class="card"><h3>Agentes</h3><div class="value" id="totalAgentes">0</div></div>
+  <div class="card"><h3>Tiempo promedio</h3><div class="value" id="promedio">00:00:00</div></div>
+  <div class="card"><h3>&gt; 1 hora</h3><div class="value" id="mayor1h">0</div></div>
+  <div class="card"><h3>&gt; 4 horas</h3><div class="value" id="mayor4h">0</div></div>
+  <div class="card"><h3>Incongruencias</h3><div class="value" id="incongruencias">0</div></div>
+</div>
+<div class="section">
+  <h2>📈 Tableros gerenciales</h2>
+  <div class="grid2">
+    <div><h3>Productividad por día</h3><div class="chart-box"><canvas id="chartDia"></canvas></div></div>
+    <div><h3>Productividad por mes</h3><div class="chart-box"><canvas id="chartMes"></canvas></div></div>
+    <div><h3>Productividad por año</h3><div class="chart-box"><canvas id="chartAnio"></canvas></div></div>
+    <div><h3>Registros por agente</h3><div class="chart-box"><canvas id="chartAgente"></canvas></div></div>
+  </div>
+</div>
+<div class="section">
+  <h2>🔎 Detalle operativo</h2>
+  <div class="filters">
+    <input id="searchInput" class="search" placeholder="Buscar caso, agente, correo, gestión, estado...">
+    <select id="agentFilter"><option value="">Todos los agentes</option></select>
+    <select id="gestionFilter"><option value="">Todos los tipos de gestión</option></select>
+    <select id="estadoFilter"><option value="">Todos los estados</option></select>
+  </div>
+  <div class="table-wrap"><table id="detailTable"><thead><tr>
+    <th>Caso</th><th>Tipo de caso</th><th>Estado</th><th>Fecha</th><th>Hora</th><th>Fecha/hora registro</th><th>Agente</th><th>Correo</th><th>Gestión</th><th>Tiempo</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+<div class="section">
+  <h2>👤 Productividad por agente</h2>
+  <div class="table-wrap"><table id="agentTable"><thead><tr>
+    <th>Agente</th><th>Registros</th><th>Casos únicos</th><th>Gestiones</th><th>Tiempo promedio</th><th>Tiempo máximo</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+<div class="section">
+  <h2>⚠️ Incongruencias: mismo agente + mismo caso repetido</h2>
+  <p class="hint" style="margin-bottom:10px">Se agrupan todas las filas donde coinciden el caso y el agente. No se eliminan registros: se muestran para auditoría.</p>
+  <div class="table-wrap"><table id="dupTable"><thead><tr>
+    <th>Caso</th><th>Agente</th><th>Veces</th><th>Gestiones</th><th>Primer registro</th><th>Último registro</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+<div class="section">
+  <h2>📋 Resumen por caso</h2>
+  <div class="table-wrap"><table id="caseTable"><thead><tr>
+    <th>Caso</th><th>Último agente</th><th>Última gestión</th><th>Fecha/hora última actividad</th><th>Registros</th><th>Tiempo desde última actividad</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+<script>
+let registros=[],charts={};
+// Formato de fecha detectado automáticamente para el archivo cargado:
+// 'MDY' = mes/día/año (ej. 9/25/2026), 'DMY' = día/mes/año (ej. 25/9/2026).
+// Se recalcula en cada análisis; nunca se asume un único formato fijo.
+let dateFormat='MDY';
+const $=id=>document.getElementById(id);
+function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function setStatus(msg,cls){$('status').textContent=msg;$('status').className=cls||''}
+function excelDateToParts(v){
+  if(v instanceof Date&&!isNaN(v)){
+    return {y:v.getFullYear(),m:v.getMonth()+1,d:v.getDate(),hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
+  }
+  if(typeof v==='number'){
+    // Si el número no tiene parte entera (ej. 0.3125 = 07:30:00), es SOLO
+    // una hora, no una fecha real. Dejar que parse_date_code lo procese
+    // aquí generaba fechas fantasma en 1899/1900 ("años que no tiene
+    // registro"). En ese caso se devuelve null y la hora se toma aparte
+    // con parseTime().
+    if(Math.abs(v)<1)return null;
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d)return {y:d.y,m:d.m,d:d.d,hh:d.H||0,mi:d.M||0,ss:Math.floor(d.S||0)};
+  }
+  return null;
+}
+
+// IMPORTANTE: no se asume un único formato fijo (ni DD/MM/AAAA ni
+// MM/DD/AAAA), porque cada plataforma exporta distinto y asumir mal
+// producía fechas/años inexistentes. En su lugar, detectDateFormat()
+// analiza una muestra real de la columna de fecha ANTES de procesar filas:
+// - Si el primer número de una fecha es >12, ese valor solo puede ser el
+//   día  => el archivo está en DD/MM/AAAA (inequívoco).
+// - Si el segundo número es >12, ese valor solo puede ser el día
+//   => el archivo está en MM/DD/AAAA (inequívoco).
+// - Si ambos son <=12 en toda la muestra (ambiguo), se usa MM/DD/AAAA por
+//   defecto, que es el formato de esta plataforma (ej. 9/25/2026).
+function sampleDateNumberPairs(matrix,startIdx,col){
+  const out=[];
+  if(col<0)return out;
+  for(let i=startIdx;i<matrix.length&&out.length<120;i++){
+    const v=matrix[i]?.[col];
+    if(v===undefined||v===null||v==='')continue;
+    if(typeof v==='number')continue; // los seriales numéricos de Excel no son ambiguos
+    const s=String(v).trim().replace(/^['"]|['"]$/g,'').trim();
+    const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})/);
+    if(m)out.push([Number(m[1]),Number(m[2])]);
+  }
+  return out;
+}
+function detectDateFormat(matrix,startIdx,cols){
+  const col=cols.fecha>=0?cols.fecha:cols.fechaHora;
+  const pairs=sampleDateNumberPairs(matrix,startIdx,col);
+  if(!pairs.length)return 'MDY';
+  let forcedDMY=0,forcedMDY=0;
+  pairs.forEach(([a,b])=>{
+    if(a>12&&b<=12)forcedDMY++;
+    else if(b>12&&a<=12)forcedMDY++;
+  });
+  if(forcedMDY>0&&forcedDMY===0)return 'MDY';
+  if(forcedDMY>0&&forcedMDY===0)return 'DMY';
+  if(forcedDMY>0&&forcedMDY>0)return forcedMDY>=forcedDMY?'MDY':'DMY'; // formato mixto: se usa el mayoritario
+  return 'MDY'; // totalmente ambiguo (día y mes <=12 siempre): formato de esta plataforma
+}
+function parseDMYParts(value){
+  if(value===null||value===undefined||value==='')return null;
+  const s=String(value).trim().replace(/^['"]|['"]$/g,'').trim();
+  let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  if(!m)return null;
+  let n1=Number(m[1]),n2=Number(m[2]),yy=Number(m[3]);
+  let dd,mm;
+  if(n1>12){dd=n1;mm=n2}          // inequívoco: solo puede ser día/mes
+  else if(n2>12){mm=n1;dd=n2}     // inequívoco: solo puede ser mes/día
+  else if(dateFormat==='DMY'){dd=n1;mm=n2}
+  else {mm=n1;dd=n2}
+  // 00-49 => 2000-2049; 50-99 => 1950-1999.
+  if(yy<100)yy += yy<=49 ? 2000 : 1900;
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return {y:yy,m:mm,d:dd};
+}
+
+function makeLocalDate(parts,time){
+  if(!parts)return null;
+  const hh=time?.hh||0, mi=time?.mi||0, ss=time?.ss||0;
+  const d=new Date(parts.y,parts.m-1,parts.d,hh,mi,ss,0);
+  // Evita aceptar fechas imposibles como 31/02.
+  if(d.getFullYear()!==parts.y||d.getMonth()!==parts.m-1||d.getDate()!==parts.d)return null;
+  return d;
+}
+function parseDateOnly(v){
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:0,mi:0,ss:0});
+  const dmy=parseDMYParts(v);
+  if(dmy)return makeLocalDate(dmy,{hh:0,mi:0,ss:0});
+  const s=String(v??'').trim();
+  let m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(m)return makeLocalDate({y:+m[1],m:+m[2],d:+m[3]},{hh:0,mi:0,ss:0});
+  return null;
+}
+function parseTime(v){
+  if(v instanceof Date&&!isNaN(v))return{hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
+  if(typeof v==='number'){
+    const total=Math.round((v%1)*86400);
+    return{hh:Math.floor(total/3600)%24,mi:Math.floor(total/60)%60,ss:total%60};
+  }
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  let m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+  let hh=+m[1],mi=+m[2],ss=+(m[3]||0);
+  if(m[4]){if(/pm/i.test(m[4])&&hh!==12)hh+=12;if(/am/i.test(m[4])&&hh===12)hh=0;}
+  return{hh,mi,ss};
+}
+function parseDateTime(v){
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:p.hh,mi:p.mi,ss:p.ss});
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  // Fecha+hora en un solo campo (DD/MM/AAAA o MM/DD/AAAA, según se detecte),
+  // con AM/PM opcional.
+  let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})(?:\s+|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+  let n1=+m[1],n2=+m[2],yy=+m[3]; if(yy<100)yy+=yy<=49?2000:1900;
+  let dd,mm;
+  if(n1>12){dd=n1;mm=n2}
+  else if(n2>12){mm=n1;dd=n2}
+  else if(dateFormat==='DMY'){dd=n1;mm=n2}
+  else {mm=n1;dd=n2}
+  let hh=+m[4],mi=+m[5],ss=+(m[6]||0);
+  if(m[7]){if(/pm/i.test(m[7])&&hh!==12)hh+=12;if(/am/i.test(m[7])&&hh===12)hh=0;}
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return makeLocalDate({y:yy,m:mm,d:dd},{hh,mi,ss});
+}
+function combineDateTime(dateVal,timeVal,fullVal){
+  const full=parseDateTime(fullVal);
+  if(full)return full;
+  const d=parseDateOnly(dateVal),t=parseTime(timeVal);
+  if(d&&t){d.setHours(t.hh,t.mi,t.ss,0);return d}
+  return d;
+}
+function fmtDate(d){return d?`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`:'—'}
+function fmtTime(d){return d?`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`:'—'}
+function fmtDateTime(d){return d?`${fmtDate(d)} ${fmtTime(d)}`:'—'}
+function duration(sec){if(!Number.isFinite(sec)||sec<0)sec=0;const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+function elapsed(d){return d?Math.max(0,(Date.now()-d.getTime())/1000):0}
+function findCol(headers,aliases){for(const a of aliases){const i=headers.findIndex(h=>norm(h)===norm(a));if(i>=0)return i}for(const a of aliases){const n=norm(a),i=headers.findIndex(h=>norm(h).includes(n));if(i>=0)return i}return-1}
+function detectHeaders(matrix){
+  const aliasesCase=['NumeroCaso','NúmeroCaso','Número del caso','Numero del caso','Case Number','NumerodeCaso'];
+  const aliasesDate=['Fecha','Fecha de modificación','Last Modified Date'];
+  for(let i=0;i<Math.min(matrix.length,50);i++){
+    const row=matrix[i]||[],joined=row.map(norm).join('|');
+    const hasCase=aliasesCase.some(a=>joined.includes(norm(a))),hasDate=aliasesDate.some(a=>joined.includes(norm(a)));
+    if(i===0||hasCase||hasDate){
+      const headers=row.map(v=>String(v??'').trim());
+      const cols={
+        caso:findCol(headers,aliasesCase),casoAlt:findCol(headers,['NumerodeCaso','Número de caso','Case Number']),
+        tipo:findCol(headers,['TipoCaso','Tipo de caso','Case Type']),estado:findCol(headers,['EstadoCaso','Estado','Case Status']),
+        fecha:findCol(headers,['Fecha','Fecha de modificación','Last Modified Date']),hora:findCol(headers,['Hora','Time']),
+        correo:findCol(headers,['Correo','Email','Correo electrónico']),usuario:findCol(headers,['Usuario','Agente','Propietario del caso','Owner','Case Owner']),
+        fechaHora:findCol(headers,['FechaHoraRegistro','Fecha/hora registro','Fecha Hora Registro','Fecha y hora de registro']),
+        gestion:findCol(headers,['TipoGestion','Tipo de gestión','Gestión','Gestion','Tipo Gestión']),
+        evento:findCol(headers,['Campo/Evento','Campo Evento','Field/Event']),nuevo:findCol(headers,['Valor Nuevo','New Value'])};
+      if(cols.caso<0&&cols.casoAlt>=0)cols.caso=cols.casoAlt;return{headerRowIdx:i,cols}
+    }
+  }return null
+}
+function processFile(){
+  const file=$('fileInput').files[0];if(!file){setStatus('Selecciona un archivo primero.','err-msg');return}setStatus('Procesando archivo...','info-msg');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const isCsv=/\.csv$/i.test(file.name);
+      let wb;
+      if(isCsv){
+        // El archivo operativo se descarga como CSV separado por comas.
+        // Se lee como texto para evitar que el navegador/Excel intente
+        // reinterpretar las fechas DD/MM/YY.
+        const text=new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+        wb=XLSX.read(text,{type:'string',raw:true,cellDates:false,FS:','});
+      }else{
+        wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:false,raw:true});
+      }
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
+      if(!matrix.length)throw new Error('El archivo está vacío.');
+      analizar(matrix,file.name);
+    }catch(err){console.error(err);setStatus('❌ No se pudo leer el archivo: '+err.message,'err-msg')}
+  };
+  reader.onerror=()=>setStatus('❌ Error leyendo el archivo.','err-msg');
+  reader.readAsArrayBuffer(file)
+}
+function analizar(matrix,fileName){
+  const d=detectHeaders(matrix);if(!d){setStatus('❌ No se pudo identificar la fila de encabezados.','err-msg');return}
+  const{headerRowIdx:c,cols}=d;if(cols.caso<0|| (cols.fecha<0&&cols.fechaHora<0)){setStatus('❌ Faltan columnas mínimas: identificador de caso y Fecha o FechaHoraRegistro.','err-msg');return}
+  dateFormat=detectDateFormat(matrix,c+1,cols);
+  const out=[];let ignored=0,currentCase='';
+  for(let i=c+1;i<matrix.length;i++){
+    const row=matrix[i]||[];let caso=String(row[cols.caso]??'').trim();if(norm(caso)==='total')break;if(norm(caso)==='subtotal')continue;if(!caso&&cols.casoAlt>=0)caso=String(row[cols.casoAlt]??'').trim();if(caso)currentCase=caso;caso=currentCase;if(!caso){ignored++;continue}
+    const tipo=String(row[cols.tipo]??'').trim(),estado=String(row[cols.estado]??'').trim(),fecha=cols.fecha>=0?row[cols.fecha]:'',hora=cols.hora>=0?row[cols.hora]:'',fechaHora=cols.fechaHora>=0?row[cols.fechaHora]:'';const dt=combineDateTime(fecha,hora,fechaHora);if(!dt){ignored++;continue}
+    let agente=String(row[cols.usuario]??'').trim();if(!agente&&cols.nuevo>=0)agente=String(row[cols.nuevo]??'').trim();if(!agente)agente='Sin asignar';
+    out.push({caso,tipo,estado,fecha:parseDateOnly(fecha)||dt,registro:dt,agente,correo:cols.correo>=0?String(row[cols.correo]??'').trim():'',gestion:cols.gestion>=0?String(row[cols.gestion]??'').trim():''})
+  }
+  registros=out;if(!registros.length){setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');return}fillFilters();renderAll();$('btnActualizar').disabled=false;$('btnExportar').disabled=false;setStatus(`✅ ${registros.length} registros procesados desde "${fileName}". Formato de fecha detectado: ${dateFormat==='DMY'?'DD/MM/AAAA':'MM/DD/AAAA'}.${ignored?` ${ignored} filas ignoradas.`:''}`,'ok-msg')
+}
+function uniqueCases(){return new Set(registros.map(r=>norm(r.caso))).size}function uniqueAgents(){return new Set(registros.map(r=>norm(r.agente))).size}
+function renderAll(){renderCards();renderCharts();renderDetail();renderAgents();renderDuplicates();renderCases();$('lastUpdate').textContent='Última actualización: '+new Date().toLocaleString('es-CO')}
+function renderCards(){const avg=registros.length?registros.reduce((s,r)=>s+elapsed(r.registro),0)/registros.length:0;$('totalRegistros').textContent=registros.length;$('casosUnicos').textContent=uniqueCases();$('totalAgentes').textContent=uniqueAgents();$('promedio').textContent=duration(avg);$('mayor1h').textContent=registros.filter(r=>elapsed(r.registro)>3600).length;$('mayor4h').textContent=registros.filter(r=>elapsed(r.registro)>14400).length;$('incongruencias').textContent=countDuplicateGroups()}
+function groupBy(fn){const m={};registros.forEach(r=>{const k=fn(r);m[k]=(m[k]||0)+1});return m}
+function makeChart(id,type,labels,data,label){if(charts[id])charts[id].destroy();charts[id]=new Chart($(id),{type,data:{labels,datasets:[{label,data,borderWidth:2,backgroundColor:'rgba(54,162,235,.45)',borderColor:'rgba(54,162,235,1)',tension:.25}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}})}
+function renderCharts(){
+  const byDay=groupBy(r=>`${r.registro.getFullYear()}-${String(r.registro.getMonth()+1).padStart(2,'0')}-${String(r.registro.getDate()).padStart(2,'0')}`),byMonth=groupBy(r=>`${r.registro.getFullYear()}-${String(r.registro.getMonth()+1).padStart(2,'0')}`),byYear=groupBy(r=>String(r.registro.getFullYear())),byAgent=groupBy(r=>r.agente||'Sin asignar');
+  const dk=Object.keys(byDay).sort(),mk=Object.keys(byMonth).sort(),yk=Object.keys(byYear).sort(),ag=Object.entries(byAgent).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartDia','line',dk.map(k=>{const[y,m,d]=k.split('-');return`${d}/${m}/${y.slice(-2)}`}),dk.map(k=>byDay[k]),'Registros');
+  makeChart('chartMes','bar',mk.map(k=>{const[y,m]=k.split('-');return`${m}/${y}`}),mk.map(k=>byMonth[k]),'Registros');makeChart('chartAnio','bar',yk,yk.map(k=>byYear[k]),'Registros');makeChart('chartAgente','bar',ag.map(x=>x[0]),ag.map(x=>x[1]),'Registros')
+}
+function getFiltered(){const q=norm($('searchInput').value),a=$('agentFilter').value,g=$('gestionFilter').value,e=$('estadoFilter').value;return registros.filter(r=>(!q||[r.caso,r.agente,r.correo,r.gestion,r.estado,r.tipo].some(v=>norm(v).includes(q)))&&(!a||r.agente===a)&&(!g||r.gestion===g)&&(!e||r.estado===e))}
+function renderDetail(){const tb=document.querySelector('#detailTable tbody');tb.innerHTML='';getFiltered().sort((a,b)=>b.registro-a.registro).forEach(r=>{const s=elapsed(r.registro),tr=document.createElement('tr');tr.className=s>14400?'critico':s>3600?'alerta':'ok';tr.innerHTML=`<td><b>${esc(r.caso)}</b></td><td>${esc(r.tipo)}</td><td>${esc(r.estado)}</td><td>${fmtDate(r.fecha)}</td><td>${fmtTime(r.registro)}</td><td><b>${fmtDateTime(r.registro)}</b></td><td>${esc(r.agente)}</td><td>${esc(r.correo)}</td><td>${esc(r.gestion)}</td><td>${duration(s)}</td>`;tb.appendChild(tr)})}
+function fillFilters(){const fill=(id,vals,label)=>{const el=$(id),old=el.value;el.innerHTML=`<option value="">${label}</option>`;[...new Set(vals.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});if([...el.options].some(o=>o.value===old))el.value=old};fill('agentFilter',registros.map(r=>r.agente),'Todos los agentes');fill('gestionFilter',registros.map(r=>r.gestion),'Todos los tipos de gestión');fill('estadoFilter',registros.map(r=>r.estado),'Todos los estados')}
+function renderAgents(){const map={};registros.forEach(r=>{const k=r.agente||'Sin asignar';if(!map[k])map[k]={rows:0,cases:new Set(),gest:new Set(),sum:0,max:0};const s=elapsed(r.registro);map[k].rows++;map[k].cases.add(norm(r.caso));if(r.gestion)map[k].gest.add(r.gestion);map[k].sum+=s;map[k].max=Math.max(map[k].max,s)});const tb=document.querySelector('#agentTable tbody');tb.innerHTML='';Object.entries(map).sort((a,b)=>b[1].rows-a[1].rows).forEach(([name,x])=>{tb.innerHTML+=`<tr><td><b>${esc(name)}</b></td><td>${x.rows}</td><td>${x.cases.size}</td><td>${x.gest.size}</td><td>${duration(x.sum/x.rows)}</td><td>${duration(x.max)}</td></tr>`})}
+function duplicateGroups(){const m={};registros.forEach(r=>{const k=norm(r.caso)+'||'+norm(r.agente);if(!m[k])m[k]=[];m[k].push(r)});return Object.values(m).filter(a=>a.length>1).sort((a,b)=>b.length-a.length)}
+function countDuplicateGroups(){return duplicateGroups().length}
+function renderDuplicates(){const tb=document.querySelector('#dupTable tbody');tb.innerHTML='';duplicateGroups().forEach(arr=>{arr.sort((a,b)=>a.registro-b.registro);const cases=[...new Set(arr.map(r=>r.gestion).filter(Boolean))].join(', ')||'—';tb.innerHTML+=`<tr><td><b>${esc(arr[0].caso)}</b></td><td>${esc(arr[0].agente)}</td><td><b>${arr.length}</b></td><td>${esc(cases)}</td><td>${fmtDateTime(arr[0].registro)}</td><td>${fmtDateTime(arr[arr.length-1].registro)}</td></tr>`})}
+function renderCases(){const m={};registros.forEach(r=>{const k=norm(r.caso);if(!m[k])m[k]=[];m[k].push(r)});Object.values(m).forEach(a=>a.sort((x,y)=>y.registro-x.registro));const tb=document.querySelector('#caseTable tbody');tb.innerHTML='';Object.values(m).sort((a,b)=>b[0].registro-a[0].registro).forEach(arr=>{const r=arr[0];tb.innerHTML+=`<tr><td><b>${esc(r.caso)}</b></td><td>${esc(r.agente)}</td><td>${esc(r.gestion||'—')}</td><td>${fmtDateTime(r.registro)}</td><td>${arr.length}</td><td>${duration(elapsed(r.registro))}</td></tr>`})}
+function exportExcel(){if(!registros.length)return;const rows=registros.map(r=>({'Caso':r.caso,'Tipo de caso':r.tipo,'Estado':r.estado,'Fecha':fmtDate(r.fecha),'Hora':fmtTime(r.registro),'Fecha/hora registro':fmtDateTime(r.registro),'Agente':r.agente,'Correo':r.correo,'Tipo de gestión':r.gestion,'Tiempo transcurrido':duration(elapsed(r.registro))}));const ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Detalle');XLSX.writeFile(wb,'Productividad_Dashboard_Resultado.xlsx')}
+$('btnAnalizar').addEventListener('click',processFile);$('fileInput').addEventListener('change',()=>{if($('fileInput').files[0])processFile()});$('btnActualizar').addEventListener('click',renderAll);$('btnExportar').addEventListener('click',exportExcel);['searchInput','agentFilter','gestionFilter','estadoFilter'].forEach(id=>$(id).addEventListener('input',renderDetail));setInterval(()=>{if(registros.length)renderAll()},60000);
+</script>
+</body>
+</html>
