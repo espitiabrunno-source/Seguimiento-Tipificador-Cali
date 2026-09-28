@@ -884,7 +884,19 @@ function renderCharts(){
   );
 
   makeChart('chartParticipacion','doughnut',
-    ag.map(x=>x[0]),ag.map(x=>x[1]),'Participación'
+    ag.map(x=>x[0]),ag.map(x=>x[1]),'Participación',
+            {
+backgroundColor: [
+'#003f5c',
+'#2f4b7c',
+'#665191',
+'#a05195',
+'#d45087',
+'#f95d6a',
+'#ff7c43',
+'#ffa600'
+]
+}
   );
 
   const byTipo=groupBy(r=>r.tipo||'Sin tipo');
