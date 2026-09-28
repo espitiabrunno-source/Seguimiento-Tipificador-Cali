@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Aging & Productivity Dashboard</title>
+
+<!-- GitHub Pages: librerías públicas -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#002b5c;
+  --blue:#0066ff;
+  --blue2:#2d9cdb;
+  --bg:#f4f7fb;
+  --text:#172033;
+  --muted:#667085;
+  --border:#dce3ec;
+  --green:#087f3d;
+  --yellow:#a66b00;
+  --red:#c62828;
+  --white:#fff;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  padding:18px;
+  font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+}
+.header{
+  background:linear-gradient(135deg,#002b5c,#064f9d);
+  color:#fff;padding:22px;border-radius:14px;margin-bottom:16px;
+}
+.header h1{font-size:25px;margin-bottom:6px}
+.header p{opacity:.92}
+.controls,.section,.card{
+  background:#fff;border-radius:14px;box-shadow:0 2px 8px #00000010;
+}
+.controls{
+  padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+input[type=file],input,select{
+  border:1px solid #ccd5e2;border-radius:8px;padding:10px;background:#fff;
+}
+button{
+  border:0;border-radius:8px;padding:10px 16px;background:var(--blue);
+  color:#fff;font-weight:700;cursor:pointer;
+}
+button.secondary{background:#52637a}
+button:disabled{background:#aebbd0;cursor:not-allowed}
+.hint{font-size:12px;color:var(--muted)}
+#status{margin:10px 0;min-height:20px;font-weight:700}
+.ok-msg{color:var(--green)}.err-msg{color:var(--red)}.info-msg{color:#0066cc}
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;margin:16px 0;
+}
+.card{padding:17px}
+.card h3{font-size:13px;color:var(--muted);margin-bottom:8px}
+.value{font-size:27px;font-weight:800}
+.small-value{font-size:19px}
+.section{padding:16px;margin-top:16px}
+.section h2{font-size:18px;margin-bottom:12px;color:#17365d}
+.section h3{font-size:14px;margin-bottom:8px;color:#17365d}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.chart-box{height:330px;position:relative}
+.chart-box.tall{height:390px}
+.filters{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px;
+}
+.filters2{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px;
+}
+.search{width:100%}
+.table-wrap{max-height:520px;overflow:auto;border:1px solid #e3e8ef;border-radius:10px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th{
+  background:var(--navy);color:#fff;padding:11px;text-align:left;
+  position:sticky;top:0;z-index:2;font-size:13px;
+}
+td{
+  padding:9px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;
+  white-space:nowrap;
+}
+tr:hover td{background:#f7faff}
+.critico td{background:#ffe5e5}
+.alerta td{background:#fff6d6}
+.ok td{background:#e7f8ec}
+.badge{
+  display:inline-block;padding:4px 8px;border-radius:999px;
+  font-size:11px;font-weight:700;
+}
+.badge-green{background:#e7f8ec;color:#087f3d}
+.badge-yellow{background:#fff2cc;color:#8a5a00}
+.badge-red{background:#ffe5e5;color:#b42318}
+.badge-blue{background:#e8f1ff;color:#174ea6}
+.kpi-note{font-size:11px;color:var(--muted);margin-top:5px}
+.mini-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;
+}
+.mini{
+  border:1px solid var(--border);border-radius:10px;padding:12px;background:#fafcff;
+}
+.mini strong{display:block;font-size:20px;margin-top:4px}
+.legend{
+  display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px;
+}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+.note{
+  padding:10px 12px;border-left:4px solid var(--blue);
+  background:#f5f9ff;border-radius:6px;font-size:12px;color:#475467;margin-bottom:12px;
+}
+.hidden{display:none!important}
+@media(max-width:1100px){
+  .filters,.filters2{grid-template-columns:1fr 1fr}
+  .grid3{grid-template-columns:1fr 1fr}
+}
+@media(max-width:900px){
+  .grid2,.grid3,.filters,.filters2{grid-template-columns:1fr}
+  body{padding:10px}.chart-box{height:280px}
+}
+</style>
+</head>
+
+<body>
+<div class="header">
+  <h1>📊 Case Aging & Productivity Dashboard</h1>
+  <p>Productividad, carga operativa, resolución, backlog, tipificación, tiempos e incongruencias.</p>
+</div>
+
+<div class="controls">
+  <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+  <button id="btnAnalizar">Analizar archivo</button>
+  <button id="btnActualizar" disabled>🔄 Recalcular</button>
+  <button id="btnExportar" disabled>⬇️ Exportar resultado</button>
+  <span class="hint">Compatible con CSV separado por comas y Excel. La fecha se interpreta de forma segura para evitar años fantasma.</span>
+</div>
+
+<div id="status"></div>
+<div id="lastUpdate" class="hint"></div>
+
+<div class="cards">
+  <div class="card"><h3>Registros</h3><div class="value" id="totalRegistros">0</div></div>
+  <div class="card"><h3>Casos únicos</h3><div class="value" id="casosUnicos">0</div></div>
+  <div class="card"><h3>Agentes</h3><div class="value" id="totalAgentes">0</div></div>
+  <div class="card"><h3>Tiempo promedio</h3><div class="value" id="promedio">00:00:00</div></div>
+  <div class="card"><h3>Índice de resolución</h3><div class="value" id="indiceResolucion">0%</div></div>
+  <div class="card"><h3>Backlog</h3><div class="value" id="backlog">0</div></div>
+  <div class="card"><h3>Eficiencia tipificación</h3><div class="value" id="eficienciaTip">0%</div></div>
+  <div class="card"><h3>Incongruencias</h3><div class="value" id="incongruencias">0</div></div>
+</div>
+
+<div class="section">
+  <h2>🎯 Resumen gerencial</h2>
+  <div class="mini-grid">
+    <div class="mini"><span class="hint">ICO promedio</span><strong id="icoPromedio">0.00</strong><div class="kpi-note">Registros por hora programada</div></div>
+    <div class="mini"><span class="hint">Asesor con mayor carga</span><strong id="topCarga">—</strong><div class="kpi-note" id="topCargaVal">—</div></div>
+    <div class="mini"><span class="hint">Tipo de caso predominante</span><strong id="topTipo">—</strong><div class="kpi-note" id="topTipoVal">—</div></div>
+    <div class="mini"><span class="hint">Gestión predominante</span><strong id="topGestion">—</strong><div class="kpi-note" id="topGestionVal">—</div></div>
+    <div class="mini"><span class="hint">Casos pendientes</span><strong id="backlogCasos">0</strong><div class="kpi-note">Último estado no resuelto</div></div>
+    <div class="mini"><span class="hint">Participación mayor</span><strong id="participacionMayor">—</strong><div class="kpi-note" id="participacionMayorVal">—</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>📈 Tableros gerenciales</h2>
+  <div class="grid2">
+    <div>
+      <h3>Productividad por día</h3>
+      <div class="chart-box"><canvas id="chartDia"></canvas></div>
+    </div>
+    <div>
+      <h3>Tendencia diaria y promedio móvil 7 días</h3>
+      <div class="chart-box"><canvas id="chartTendencia"></canvas></div>
+    </div>
+    <div>
+      <h3>Productividad por mes</h3>
+      <div class="chart-box"><canvas id="chartMes"></canvas></div>
+    </div>
+    <div>
+      <h3>Productividad por año</h3>
+      <div class="chart-box"><canvas id="chartAnio"></canvas></div>
+    </div>
+    <div>
+      <h3>Registros por agente</h3>
+      <div class="chart-box tall"><canvas id="chartAgente"></canvas></div>
+    </div>
+    <div>
+      <h3>Participación del registro</h3>
+      <div class="chart-box tall"><canvas id="chartParticipacion"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>👤 Productividad y carga por asesor</h2>
+  <div class="filters2">
+    <select id="agentKpiFilter"><option value="">Todos los agentes</option></select>
+    <select id="dayKpiFilter"><option value="">Todos los días</option></select>
+    <select id="monthKpiFilter"><option value="">Todos los meses</option></select>
+    <select id="yearKpiFilter"><option value="">Todos los años</option></select>
+  </div>
+  <div class="table-wrap">
+    <table id="agentTable">
+      <thead><tr>
+        <th>Agente</th><th>Registros</th><th>Casos únicos</th><th>Horas programadas</th>
+        <th>Registros/hora</th><th>ICO</th><th>Participación</th><th>Tipificación</th>
+        <th>Resolución</th><th>Tiempo promedio</th><th>Tiempo máximo</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>🧭 Análisis por tipo de caso y gestión</h2>
+  <div class="grid2">
+    <div>
+      <h3>Complejidad / tipo de caso</h3>
+      <div class="chart-box"><canvas id="chartTipo"></canvas></div>
+    </div>
+    <div>
+      <h3>Registros por tipo de gestión</h3>
+      <div class="chart-box"><canvas id="chartGestion"></canvas></div>
+    </div>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table id="typeTable">
+      <thead><tr>
+        <th>Tipo de caso</th><th>Registros</th><th>Casos únicos</th><th>Participación</th>
+        <th>Tiempo promedio</th><th>Backlog</th><th>Índice de resolución</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>📦 Backlog operativo</h2>
+  <div class="note">
+    Un caso entra en backlog cuando su <b>último registro</b> tiene un estado que no se reconoce como cerrado/resuelto/completado.
+    La clasificación utiliza el estado que realmente viene en la base; no modifica el dato original.
+  </div>
+  <div class="grid2">
+    <div>
+      <h3>Backlog por tipo de caso</h3>
+      <div class="chart-box"><canvas id="chartBacklogTipo"></canvas></div>
+    </div>
+    <div>
+      <h3>Backlog por estado</h3>
+      <div class="chart-box"><canvas id="chartBacklogEstado"></canvas></div>
+    </div>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table id="backlogTable">
+      <thead><tr>
+        <th>Caso</th><th>Tipo</th><th>Estado actual</th><th>Agente</th>
+        <th>Última gestión</th><th>Último registro</th><th>Tiempo en backlog</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>🔎 Detalle operativo</h2>
+  <div class="filters">
+    <input id="searchInput" class="search" placeholder="Buscar caso, agente, correo, gestión, estado, tipo...">
+    <select id="agentFilter"><option value="">Todos los agentes</option></select>
+    <select id="gestionFilter"><option value="">Todos los tipos de gestión</option></select>
+    <select id="estadoFilter"><option value="">Todos los estados</option></select>
+    <select id="tipoFilter"><option value="">Todos los tipos de caso</option></select>
+  </div>
+  <div class="table-wrap">
+    <table id="detailTable">
+      <thead><tr>
+        <th>Caso</th><th>Tipo de caso</th><th>Estado</th><th>Fecha</th><th>Hora</th>
+        <th>Fecha/hora registro</th><th>Agente</th><th>Correo</th><th>Gestión</th><th>Tiempo</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>⚠️ Incongruencias: mismo agente + mismo caso repetido</h2>
+  <p class="hint" style="margin-bottom:10px">
+    Se agrupan todas las filas donde coinciden el caso y el agente. No se eliminan registros.
+  </p>
+  <div class="table-wrap">
+    <table id="dupTable">
+      <thead><tr>
+        <th>Caso</th><th>Agente</th><th>Veces</th><th>Gestiones</th><th>Primer registro</th><th>Último registro</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>📋 Resumen por caso</h2>
+  <div class="table-wrap">
+    <table id="caseTable">
+      <thead><tr>
+        <th>Caso</th><th>Último agente</th><th>Última gestión</th><th>Fecha/hora última actividad</th>
+        <th>Registros</th><th>Tiempo desde última actividad</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CASE AGING & PRODUCTIVITY DASHBOARD
+   GitHub Pages / HTML + CSS + JavaScript Vanilla
+   ============================================================ */
+
+let registros = [];
+let charts = {};
+let dateFormat = 'MDY';
+
+/* Horas programadas según la tabla proporcionada.
+   Orden: lunes, martes, miércoles, jueves, viernes, sábado, domingo.
+   "Off" y celdas vacías = 0 horas.
+*/
+const horarios = {
+  "Valentina Delgado Pizo":[10,10,9,9,9,0,0],
+  "Nikol Adriana Muñoz Muñoz":[10,9,9,9,10,0,0],
+  "Jefrey Joel Betancur Imbachi":[9,10,9,10,9,0,0],
+  "Jhon Janer Ortiz Sanchez":[10,9,10,9,9,0,0],
+  "Andres Eduardo Reina Rangel":[9,9,9,10,10,0,0],
+  "Cristian Ivan Buendía Montaño":[9,9,6,9,9,0,4],
+  "Anyi Lorena Cardenas Correa":[9,9,9,9,6,4,0],
+  "Diana Marcela Melo Martinez":[9,9,9,9,6,4,0],
+  "Luisa Fernanda Cifuentes Grajales":[9,9,9,6,9,4,0],
+  "Heide Alexandra Diaz Londoño":[9,9,9,6,9,0,4],
+  "Jerson Javier Ruiz Lopez":[9,8,9,8,9,4,0],
+  "Kenneth Guillermo Rodriguez Gil":[9,8,9,8,9,0,4]
+};
+
+const $ = id => document.getElementById(id);
+
+function norm(v){
+  return String(v ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim();
+}
+function esc(v){
+  return String(v ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function setStatus(msg,cls){
+  $('status').textContent=msg;
+  $('status').className=cls||'';
+}
+function duration(sec){
+  if(!Number.isFinite(sec)||sec<0)sec=0;
+  const h=Math.floor(sec/3600);
+  const m=Math.floor((sec%3600)/60);
+  const s=Math.floor(sec%60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function fmtDate(d){
+  return d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}` : '—';
+}
+function fmtTime(d){
+  return d ? `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '—';
+}
+function fmtDateTime(d){
+  return d ? `${fmtDate(d)} ${fmtTime(d)}` : '—';
+}
+function elapsed(d){
+  return d ? Math.max(0,(Date.now()-d.getTime())/1000) : 0;
+}
+
+/* ---------- FECHAS ---------- */
+
+function excelDateToParts(v){
+  if(v instanceof Date && !isNaN(v)){
+    return {y:v.getFullYear(),m:v.getMonth()+1,d:v.getDate(),hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
+  }
+  if(typeof v==='number'){
+    if(Math.abs(v)<1)return null;
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d)return {y:d.y,m:d.m,d:d.d,hh:d.H||0,mi:d.M||0,ss:Math.floor(d.S||0)};
+  }
+  return null;
+}
+
+/* Detecta DMY/MDY sin convertir fechas válidas en años 2027/2028.
+   Si hay un día > 12, la interpretación es inequívoca.
+   Si todo es ambiguo, se mantiene MDY, que es el formato de exportación
+   observado en la base CSV de esta operación (ej. 9/25/2026). */
+function sampleDatePairs(matrix,startIdx,col){
+  const out=[];
+  if(col<0)return out;
+  for(let i=startIdx;i<matrix.length&&out.length<200;i++){
+    const v=matrix[i]?.[col];
+    if(v===undefined||v===null||v==='')continue;
+    if(typeof v==='number')continue;
+    const s=String(v).trim().replace(/^['"]|['"]$/g,'');
+    const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})/);
+    if(m)out.push([+m[1],+m[2]]);
+  }
+  return out;
+}
+function detectDateFormat(matrix,startIdx,cols){
+  const col=cols.fecha>=0?cols.fecha:cols.fechaHora;
+  const pairs=sampleDatePairs(matrix,startIdx,col);
+  if(!pairs.length)return 'MDY';
+  let dmy=0,mdy=0;
+  pairs.forEach(([a,b])=>{
+    if(a>12&&b<=12)dmy++;
+    else if(b>12&&a<=12)mdy++;
+  });
+  if(dmy&&!mdy)return 'DMY';
+  if(mdy&&!dmy)return 'MDY';
+  if(dmy&&mdy)return dmy>mdy?'DMY':'MDY';
+  return 'MDY';
+}
+function parseDateParts(value){
+  if(value===null||value===undefined||value==='')return null;
+  const s=String(value).trim().replace(/^['"]|['"]$/g,'').trim();
+
+  let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  if(!m)return null;
+
+  let a=+m[1],b=+m[2],yy=+m[3];
+  if(yy<100)yy += yy<=49 ? 2000 : 1900;
+
+  let dd,mm;
+  if(a>12){dd=a;mm=b}
+  else if(b>12){mm=a;dd=b}
+  else if(dateFormat==='DMY'){dd=a;mm=b}
+  else {mm=a;dd=b}
+
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return {y:yy,m:mm,d:dd};
+}
+function makeLocalDate(parts,time){
+  if(!parts)return null;
+  const hh=time?.hh||0,mi=time?.mi||0,ss=time?.ss||0;
+  const d=new Date(parts.y,parts.m-1,parts.d,hh,mi,ss,0);
+  if(d.getFullYear()!==parts.y||d.getMonth()!==parts.m-1||d.getDate()!==parts.d)return null;
+  return d;
+}
+function parseDateOnly(v){
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:0,mi:0,ss:0});
+
+  const p2=parseDateParts(v);
+  if(p2)return makeLocalDate(p2,{hh:0,mi:0,ss:0});
+
+  const s=String(v??'').trim();
+  const m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(m)return makeLocalDate({y:+m[1],m:+m[2],d:+m[3]},{hh:0,mi:0,ss:0});
+  return null;
+}
+function parseTime(v){
+  if(v instanceof Date&&!isNaN(v))
+    return {hh:v.getHours(),mi:v.getMinutes(),ss:v.getSeconds()};
+
+  if(typeof v==='number'){
+    const total=Math.round((v%1)*86400);
+    return {hh:Math.floor(total/3600)%24,mi:Math.floor(total/60)%60,ss:total%60};
+  }
+
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  let m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+
+  let hh=+m[1],mi=+m[2],ss=+(m[3]||0);
+  if(m[4]){
+    if(/pm/i.test(m[4])&&hh!==12)hh+=12;
+    if(/am/i.test(m[4])&&hh===12)hh=0;
+  }
+  if(hh>23||mi>59||ss>59)return null;
+  return {hh,mi,ss};
+}
+function parseDateTime(v){
+  const p=excelDateToParts(v);
+  if(p)return makeLocalDate({y:p.y,m:p.m,d:p.d},{hh:p.hh,mi:p.mi,ss:p.ss});
+
+  const s=String(v??'').trim().replace(/^['"]|['"]$/g,'').trim();
+  const m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})(?:\s+|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i);
+  if(!m)return null;
+
+  let a=+m[1],b=+m[2],yy=+m[3];
+  if(yy<100)yy+=yy<=49?2000:1900;
+
+  let dd,mm;
+  if(a>12){dd=a;mm=b}
+  else if(b>12){mm=a;dd=b}
+  else if(dateFormat==='DMY'){dd=a;mm=b}
+  else {mm=a;dd=b}
+
+  let hh=+m[4],mi=+m[5],ss=+(m[6]||0);
+  if(m[7]){
+    if(/pm/i.test(m[7])&&hh!==12)hh+=12;
+    if(/am/i.test(m[7])&&hh===12)hh=0;
+  }
+  return makeLocalDate({y:yy,m:mm,d:dd},{hh,mi,ss});
+}
+function combineDateTime(dateVal,timeVal,fullVal){
+  const full=parseDateTime(fullVal);
+  if(full)return full;
+
+  const d=parseDateOnly(dateVal),t=parseTime(timeVal);
+  if(d&&t){
+    d.setHours(t.hh,t.mi,t.ss,0);
+    return d;
+  }
+  return d;
+}
+
+/* ---------- COLUMNAS ---------- */
+
+function findCol(headers,aliases){
+  for(const a of aliases){
+    const i=headers.findIndex(h=>norm(h)===norm(a));
+    if(i>=0)return i;
+  }
+  for(const a of aliases){
+    const n=norm(a),i=headers.findIndex(h=>norm(h).includes(n));
+    if(i>=0)return i;
+  }
+  return -1;
+}
+function detectHeaders(matrix){
+  const aliasesCase=[
+    'NumeroCaso','NúmeroCaso','Número del caso','Numero del caso',
+    'Case Number','NumerodeCaso'
+  ];
+  const aliasesDate=['Fecha','Fecha de modificación','Last Modified Date'];
+
+  for(let i=0;i<Math.min(matrix.length,50);i++){
+    const row=matrix[i]||[];
+    const joined=row.map(norm).join('|');
+    const hasCase=aliasesCase.some(a=>joined.includes(norm(a)));
+    const hasDate=aliasesDate.some(a=>joined.includes(norm(a)));
+
+    if(i===0||hasCase||hasDate){
+      const headers=row.map(v=>String(v??'').trim());
+      const cols={
+        caso:findCol(headers,aliasesCase),
+        casoAlt:findCol(headers,['NumerodeCaso','Número de caso','Case Number']),
+        tipo:findCol(headers,['TipoCaso','Tipo de caso','Case Type','Tipo']),
+        estado:findCol(headers,['EstadoCaso','Estado','Case Status']),
+        fecha:findCol(headers,['Fecha','Fecha de modificación','Last Modified Date']),
+        hora:findCol(headers,['Hora','Time']),
+        correo:findCol(headers,['Correo','Email','Correo electrónico']),
+        usuario:findCol(headers,['Usuario','Agente','Propietario del caso','Owner','Case Owner','Name']),
+        fechaHora:findCol(headers,['FechaHoraRegistro','Fecha/hora registro','Fecha Hora Registro','Fecha y hora de registro']),
+        gestion:findCol(headers,['TipoGestion','Tipo de gestión','Gestión','Gestion','Tipo Gestión','LOB']),
+        evento:findCol(headers,['Campo/Evento','Campo Evento','Field/Event']),
+        nuevo:findCol(headers,['Valor Nuevo','New Value'])
+      };
+      if(cols.caso<0&&cols.casoAlt>=0)cols.caso=cols.casoAlt;
+      return {headerRowIdx:i,cols};
+    }
+  }
+  return null;
+}
+
+/* ---------- CARGA ---------- */
+
+function processFile(){
+  const file=$('fileInput').files[0];
+  if(!file){
+    setStatus('Selecciona un archivo primero.','err-msg');
+    return;
+  }
+
+  setStatus('Procesando archivo...','info-msg');
+
+  const reader=new FileReader();
+
+  reader.onload=e=>{
+    try{
+      const isCsv=/\.csv$/i.test(file.name);
+      let wb;
+
+      if(isCsv){
+        const text=new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+        wb=XLSX.read(text,{type:'string',raw:true,cellDates:false,FS:','});
+      }else{
+        wb=XLSX.read(new Uint8Array(e.target.result),{
+          type:'array',cellDates:false,raw:true
+        });
+      }
+
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const matrix=XLSX.utils.sheet_to_json(sheet,{
+        header:1,defval:'',raw:true
+      });
+
+      if(!matrix.length)throw new Error('El archivo está vacío.');
+
+      analizar(matrix,file.name);
+    }catch(err){
+      console.error(err);
+      setStatus('❌ No se pudo leer el archivo: '+err.message,'err-msg');
+    }
+  };
+
+  reader.onerror=()=>setStatus('❌ Error leyendo el archivo.','err-msg');
+  reader.readAsArrayBuffer(file);
+}
+
+function analizar(matrix,fileName){
+  const d=detectHeaders(matrix);
+
+  if(!d){
+    setStatus('❌ No se pudo identificar la fila de encabezados.','err-msg');
+    return;
+  }
+
+  const {headerRowIdx:c,cols}=d;
+
+  if(cols.caso<0 || (cols.fecha<0&&cols.fechaHora<0)){
+    setStatus('❌ Faltan columnas mínimas: identificador de caso y Fecha o FechaHoraRegistro.','err-msg');
+    return;
+  }
+
+  dateFormat=detectDateFormat(matrix,c+1,cols);
+
+  const out=[];
+  let ignored=0,currentCase='';
+
+  for(let i=c+1;i<matrix.length;i++){
+    const row=matrix[i]||[];
+
+    let caso=String(row[cols.caso]??'').trim();
+
+    if(norm(caso)==='total')break;
+    if(norm(caso)==='subtotal')continue;
+
+    if(!caso&&cols.casoAlt>=0)
+      caso=String(row[cols.casoAlt]??'').trim();
+
+    if(caso)currentCase=caso;
+    caso=currentCase;
+
+    if(!caso){
+      ignored++;
+      continue;
+    }
+
+    const tipo=String(row[cols.tipo]??'').trim();
+    const estado=String(row[cols.estado]??'').trim();
+    const fecha=cols.fecha>=0?row[cols.fecha]:'';
+    const hora=cols.hora>=0?row[cols.hora]:'';
+    const fechaHora=cols.fechaHora>=0?row[cols.fechaHora]:'';
+
+    const dt=combineDateTime(fecha,hora,fechaHora);
+
+    if(!dt){
+      ignored++;
+      continue;
+    }
+
+    let agente=String(row[cols.usuario]??'').trim();
+    if(!agente&&cols.nuevo>=0)
+      agente=String(row[cols.nuevo]??'').trim();
+    if(!agente)agente='Sin asignar';
+
+    out.push({
+      caso,
+      tipo,
+      estado,
+      fecha:parseDateOnly(fecha)||dt,
+      registro:dt,
+      agente,
+      correo:cols.correo>=0?String(row[cols.correo]??'').trim():'',
+      gestion:cols.gestion>=0?String(row[cols.gestion]??'').trim():'',
+      evento:cols.evento>=0?String(row[cols.evento]??'').trim():'',
+      nuevo:cols.nuevo>=0?String(row[cols.nuevo]??'').trim():''
+    });
+  }
+
+  registros=out;
+
+  if(!registros.length){
+    setStatus('⚠️ No se encontraron registros válidos con fecha/hora.','err-msg');
+    return;
+  }
+
+  fillFilters();
+  renderAll();
+
+  $('btnActualizar').disabled=false;
+  $('btnExportar').disabled=false;
+
+  setStatus(
+    `✅ ${registros.length} registros procesados desde "${fileName}". `+
+    `Formato detectado: ${dateFormat==='DMY'?'DD/MM/AAAA':'MM/DD/AAAA'}.`+
+    (ignored?` ${ignored} filas ignoradas.`:''),
+    'ok-msg'
+  );
+}
+
+/* ---------- MÉTRICAS ---------- */
+
+function uniqueCases(){
+  return new Set(registros.map(r=>norm(r.caso))).size;
+}
+function uniqueAgents(){
+  return new Set(registros.map(r=>norm(r.agente))).size;
+}
+function isResolved(status){
+  const s=norm(status);
+  return /cerrad|resuelt|complet|finaliz|solucion|resolved|closed|completed/.test(s);
+}
+function isTyped(r){
+  return !!String(r.gestion||'').trim() || !!String(r.tipo||'').trim();
+}
+function groupBy(fn){
+  const m={};
+  registros.forEach(r=>{
+    const k=fn(r);
+    m[k]=(m[k]||0)+1;
+  });
+  return m;
+}
+function caseGroups(){
+  const m={};
+  registros.forEach(r=>{
+    const k=norm(r.caso);
+    if(!m[k])m[k]=[];
+    m[k].push(r);
+  });
+  Object.values(m).forEach(a=>a.sort((x,y)=>x.registro-y.registro));
+  return m;
+}
+function latestCaseRows(){
+  return Object.values(caseGroups()).map(a=>a[a.length-1]);
+}
+function backlogRows(){
+  return latestCaseRows().filter(r=>!isResolved(r.estado));
+}
+function duplicateGroups(){
+  const m={};
+  registros.forEach(r=>{
+    const k=norm(r.caso)+'||'+norm(r.agente);
+    if(!m[k])m[k]=[];
+    m[k].push(r);
+  });
+  return Object.values(m).filter(a=>a.length>1).sort((a,b)=>b.length-a.length);
+}
+function countDuplicateGroups(){
+  return duplicateGroups().length;
+}
+
+/* Horas programadas por agente y fecha.
+   JS getDay(): domingo=0...sábado=6.
+*/
+function scheduleHours(agent,date){
+  const a=Object.keys(horarios).find(k=>norm(k)===norm(agent));
+  if(!a||!date)return 0;
+  const jsDay=date.getDay();
+  const idx=jsDay===0?6:jsDay-1;
+  return horarios[a][idx]||0;
+}
+function scheduleHoursForRows(rows){
+  return rows.reduce((sum,r)=>sum+scheduleHours(r.agente,r.registro),0);
+}
+function icoForRows(rows){
+  const hours=scheduleHoursForRows(rows);
+  return hours>0 ? rows.length/hours : 0;
+}
+function resolutionForRows(rows){
+  const cases={};
+  rows.forEach(r=>{
+    const k=norm(r.caso);
+    if(!cases[k]||r.registro>cases[k].registro)cases[k]=r;
+  });
+  const arr=Object.values(cases);
+  return arr.length ? arr.filter(r=>isResolved(r.estado)).length/arr.length : 0;
+}
+function pct(v){return `${(v*100).toFixed(1)}%`;}
+
+/* ---------- CHARTS ---------- */
+
+function makeChart(id,type,labels,data,label,extra={}){
+  if(charts[id])charts[id].destroy();
+
+  charts[id]=new Chart($(id),{
+    type,
+    data:{
+      labels,
+      datasets:[{
+        label,
+        data,
+        borderWidth:2,
+        backgroundColor:extra.backgroundColor||'rgba(54,162,235,.45)',
+        borderColor:extra.borderColor||'rgba(54,162,235,1)',
+        tension:.25
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:true}},
+      scales:{
+        y:{beginAtZero:true,ticks:{precision:0}},
+        x:{ticks:{maxRotation:45,minRotation:0}}
+      }
+    }
+  });
+}
+
+function makeMultiChart(id,labels,datasets){
+  if(charts[id])charts[id].destroy();
+
+  charts[id]=new Chart($(id),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{y:{beginAtZero:true,ticks:{precision:0}}},
+      plugins:{legend:{display:true}}
+    }
+  });
+}
+
+function renderCharts(){
+  const byDay=groupBy(r=>{
+    const d=r.registro;
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  });
+
+  const byMonth=groupBy(r=>{
+    return `${r.registro.getFullYear()}-${String(r.registro.getMonth()+1).padStart(2,'0')}`;
+  });
+
+  const byYear=groupBy(r=>String(r.registro.getFullYear()));
+  const byAgent=groupBy(r=>r.agente||'Sin asignar');
+
+  const dk=Object.keys(byDay).sort();
+  const mk=Object.keys(byMonth).sort();
+  const yk=Object.keys(byYear).sort();
+  const ag=Object.entries(byAgent).sort((a,b)=>b[1]-a[1]);
+
+  makeChart(
+    'chartDia','line',
+    dk.map(k=>{const[y,m,d]=k.split('-');return`${d}/${m}/${y.slice(-2)}`}),
+    dk.map(k=>byDay[k]),
+    'Registros'
+  );
+
+  const trend=dk.map(k=>byDay[k]);
+  const ma7=trend.map((_,i)=>{
+    const start=Math.max(0,i-6);
+    const vals=trend.slice(start,i+1);
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  });
+
+  makeMultiChart('chartTendencia',
+    dk.map(k=>{const[y,m,d]=k.split('-');return`${d}/${m}/${y.slice(-2)}`}),
+    [
+      {label:'Registros',data:trend,borderWidth:2,tension:.25},
+      {label:'Promedio móvil 7 días',data:ma7,borderWidth:2,tension:.25}
+    ]
+  );
+
+  makeChart('chartMes','bar',
+    mk.map(k=>{const[y,m]=k.split('-');return`${m}/${y}`}),
+    mk.map(k=>byMonth[k]),
+    'Registros'
+  );
+
+  makeChart('chartAnio','bar',yk,yk.map(k=>byYear[k]),'Registros');
+
+  makeChart('chartAgente','bar',
+    ag.map(x=>x[0]),ag.map(x=>x[1]),'Registros'
+  );
+
+  makeChart('chartParticipacion','doughnut',
+    ag.map(x=>x[0]),ag.map(x=>x[1]),'Participación'
+  );
+
+  const byTipo=groupBy(r=>r.tipo||'Sin tipo');
+  const tipos=Object.entries(byTipo).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartTipo','bar',tipos.map(x=>x[0]),tipos.map(x=>x[1]),'Registros');
+
+  const byGestion=groupBy(r=>r.gestion||'Sin gestión');
+  const gest=Object.entries(byGestion).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartGestion','bar',gest.map(x=>x[0]),gest.map(x=>x[1]),'Registros');
+
+  const bbTipo={};
+  backlogRows().forEach(r=>bbTipo[r.tipo||'Sin tipo']=(bbTipo[r.tipo||'Sin tipo']||0)+1);
+  const bt=Object.entries(bbTipo).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartBacklogTipo','bar',bt.map(x=>x[0]),bt.map(x=>x[1]),'Backlog');
+
+  const bbEstado={};
+  backlogRows().forEach(r=>bbEstado[r.estado||'Sin estado']=(bbEstado[r.estado||'Sin estado']||0)+1);
+  const be=Object.entries(bbEstado).sort((a,b)=>b[1]-a[1]);
+  makeChart('chartBacklogEstado','bar',be.map(x=>x[0]),be.map(x=>x[1]),'Backlog');
+}
+
+/* ---------- CARDS ---------- */
+
+function renderCards(){
+  const avg=registros.length
+    ? registros.reduce((s,r)=>s+elapsed(r.registro),0)/registros.length:0;
+
+  const latest=latestCaseRows();
+  const resolved=latest.filter(r=>isResolved(r.estado)).length;
+  const backlog=latest.length-resolved;
+  const typed=registros.filter(isTyped).length;
+
+  $('totalRegistros').textContent=registros.length;
+  $('casosUnicos').textContent=uniqueCases();
+  $('totalAgentes').textContent=uniqueAgents();
+  $('promedio').textContent=duration(avg);
+  $('indiceResolucion').textContent=pct(latest.length?resolved/latest.length:0);
+  $('backlog').textContent=backlog;
+  $('eficienciaTip').textContent=pct(registros.length?typed/registros.length:0);
+  $('incongruencias').textContent=countDuplicateGroups();
+
+  const allHours=scheduleHoursForRows(registros);
+  const ico=allHours?registros.length/allHours:0;
+  $('icoPromedio').textContent=ico.toFixed(2);
+
+  const agStats=agentStats();
+  const top=agStats.sort((a,b)=>b.ico-a.ico)[0];
+  $('topCarga').textContent=top?top.agente:'—';
+  $('topCargaVal').textContent=top?`ICO ${top.ico.toFixed(2)} · ${top.registros} registros`:'—';
+
+  const types=Object.entries(groupBy(r=>r.tipo||'Sin tipo')).sort((a,b)=>b[1]-a[1]);
+  $('topTipo').textContent=types[0]?types[0][0]:'—';
+  $('topTipoVal').textContent=types[0]?`${types[0][1]} registros`:'—';
+
+  const gest=Object.entries(groupBy(r=>r.gestion||'Sin gestión')).sort((a,b)=>b[1]-a[1]);
+  $('topGestion').textContent=gest[0]?gest[0][0]:'—';
+  $('topGestionVal').textContent=gest[0]?`${gest[0][1]} registros`:'—';
+
+  $('backlogCasos').textContent=backlog;
+
+  if(top){
+    $('participacionMayor').textContent=top.agente;
+    $('participacionMayorVal').textContent=pct(top.registros/registros.length);
+  }else{
+    $('participacionMayor').textContent='—';
+    $('participacionMayorVal').textContent='—';
+  }
+}
+
+/* ---------- FILTROS ---------- */
+
+function fillFilters(){
+  const fill=(id,vals,label)=>{
+    const el=$(id),old=el.value;
+    el.innerHTML=`<option value="">${label}</option>`;
+
+    [...new Set(vals.filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,'es'))
+      .forEach(v=>{
+        const o=document.createElement('option');
+        o.value=v;o.textContent=v;el.appendChild(o);
+      });
+
+    if([...el.options].some(o=>o.value===old))el.value=old;
+  };
+
+  fill('agentFilter',registros.map(r=>r.agente),'Todos los agentes');
+  fill('gestionFilter',registros.map(r=>r.gestion),'Todos los tipos de gestión');
+  fill('estadoFilter',registros.map(r=>r.estado),'Todos los estados');
+  fill('tipoFilter',registros.map(r=>r.tipo),'Todos los tipos de caso');
+  fill('agentKpiFilter',registros.map(r=>r.agente),'Todos los agentes');
+
+  const days=[...new Set(registros.map(r=>r.registro.toISOString().slice(0,10)))].sort();
+  const dayEl=$('dayKpiFilter');
+  dayEl.innerHTML='<option value="">Todos los días</option>';
+  days.forEach(k=>{
+    const [y,m,d]=k.split('-');
+    const o=document.createElement('option');
+    o.value=k;o.textContent=`${d}/${m}/${y.slice(-2)}`;
+    dayEl.appendChild(o);
+  });
+
+  const months=[...new Set(registros.map(r=>`${r.registro.getFullYear()}-${String(r.registro.getMonth()+1).padStart(2,'0')}`))].sort();
+  const monthEl=$('monthKpiFilter');
+  monthEl.innerHTML='<option value="">Todos los meses</option>';
+  months.forEach(k=>{
+    const [y,m]=k.split('-');
+    const o=document.createElement('option');
+    o.value=k;o.textContent=`${m}/${y}`;
+    monthEl.appendChild(o);
+  });
+
+  const years=[...new Set(registros.map(r=>String(r.registro.getFullYear())))].sort();
+  const yearEl=$('yearKpiFilter');
+  yearEl.innerHTML='<option value="">Todos los años</option>';
+  years.forEach(y=>{
+    const o=document.createElement('option');
+    o.value=y;o.textContent=y;
+    yearEl.appendChild(o);
+  });
+}
+
+function getFiltered(){
+  const q=norm($('searchInput').value);
+  const a=$('agentFilter').value;
+  const g=$('gestionFilter').value;
+  const e=$('estadoFilter').value;
+  const t=$('tipoFilter').value;
+
+  return registros.filter(r=>
+    (!q||[r.caso,r.agente,r.correo,r.gestion,r.estado,r.tipo].some(v=>norm(v).includes(q))) &&
+    (!a||r.agente===a) &&
+    (!g||r.gestion===g) &&
+    (!e||r.estado===e) &&
+    (!t||r.tipo===t)
+  );
+}
+
+/* ---------- DETALLE ---------- */
+
+function renderDetail(){
+  const tb=document.querySelector('#detailTable tbody');
+  tb.innerHTML='';
+
+  getFiltered()
+    .sort((a,b)=>b.registro-a.registro)
+    .forEach(r=>{
+      const s=elapsed(r.registro);
+      const tr=document.createElement('tr');
+      tr.className=s>14400?'critico':s>3600?'alerta':'ok';
+
+      tr.innerHTML=`
+        <td><b>${esc(r.caso)}</b></td>
+        <td>${esc(r.tipo)}</td>
+        <td>${esc(r.estado)}</td>
+        <td>${fmtDate(r.fecha)}</td>
+        <td>${fmtTime(r.registro)}</td>
+        <td><b>${fmtDateTime(r.registro)}</b></td>
+        <td>${esc(r.agente)}</td>
+        <td>${esc(r.correo)}</td>
+        <td>${esc(r.gestion)}</td>
+        <td>${duration(s)}</td>
+      `;
+      tb.appendChild(tr);
+    });
+}
+
+/* ---------- AGENTES / ICO ---------- */
+
+function agentStats(){
+  const map={};
+
+  registros.forEach(r=>{
+    const k=r.agente||'Sin asignar';
+
+    if(!map[k]){
+      map[k]={
+        agente:k,registros:0,cases:new Set(),sum:0,max:0,
+        typed:0
+      };
+    }
+
+    const x=map[k];
+    const s=elapsed(r.registro);
+
+    x.registros++;
+    x.cases.add(norm(r.caso));
+    x.sum+=s;
+    x.max=Math.max(x.max,s);
+    if(isTyped(r))x.typed++;
+  });
+
+  return Object.values(map).map(x=>{
+    const rows=registros.filter(r=>(r.agente||'Sin asignar')===x.agente);
+    const hours=scheduleHoursForRows(rows);
+
+    return {
+      ...x,
+      hours,
+      rate:hours?x.registros/hours:0,
+      ico:hours?x.registros/hours:0,
+      participation:registros.length?x.registros/registros.length:0,
+      typing:x.registros?x.typed/x.registros:0,
+      resolution:resolutionForRows(rows)
+    };
+  });
+}
+
+function renderAgents(){
+  const agentFilter=$('agentKpiFilter').value;
+  const dayFilter=$('dayKpiFilter').value;
+  const monthFilter=$('monthKpiFilter').value;
+  const yearFilter=$('yearKpiFilter').value;
+
+  let rows=registros.slice();
+
+  if(agentFilter)rows=rows.filter(r=>r.agente===agentFilter);
+  if(dayFilter)rows=rows.filter(r=>r.registro.toISOString().slice(0,10)===dayFilter);
+  if(monthFilter)rows=rows.filter(r=>{
+    const k=`${r.registro.getFullYear()}-${String(r.registro.getMonth()+1).padStart(2,'0')}`;
+    return k===monthFilter;
+  });
+  if(yearFilter)rows=rows.filter(r=>String(r.registro.getFullYear())===yearFilter);
+
+  const names=[...new Set(rows.map(r=>r.agente||'Sin asignar'))];
+
+  const tb=document.querySelector('#agentTable tbody');
+  tb.innerHTML='';
+
+  names.map(name=>{
+    const rs=rows.filter(r=>(r.agente||'Sin asignar')===name);
+    const hours=scheduleHoursForRows(rs);
+    const cases=new Set(rs.map(r=>norm(r.caso)));
+    const typed=rs.filter(isTyped).length;
+    const ico=hours?rs.length/hours:0;
+    const resolution=resolutionForRows(rs);
+
+    return {
+      name,rs,hours,cases,typed,ico,resolution,
+      avg:rs.length?rs.reduce((s,r)=>s+elapsed(r.registro),0)/rs.length:0,
+      max:rs.length?Math.max(...rs.map(r=>elapsed(r.registro))):0
+    };
+  }).sort((a,b)=>b.rs.length-a.rs.length)
+    .forEach(x=>{
+      const badge=x.ico>=1?'badge-green':x.ico>=.7?'badge-yellow':'badge-red';
+
+      tb.innerHTML+=`
+        <tr>
+          <td><b>${esc(x.name)}</b></td>
+          <td>${x.rs.length}</td>
+          <td>${x.cases.size}</td>
+          <td>${x.hours.toFixed(1)}</td>
+          <td>${x.ico.toFixed(2)}</td>
+          <td><span class="badge ${badge}">${x.ico.toFixed(2)}</span></td>
+          <td>${pct(registros.length?x.rs.length/registros.length:0)}</td>
+          <td>${pct(x.rs.length?x.typed/x.rs.length:0)}</td>
+          <td>${pct(x.resolution)}</td>
+          <td>${duration(x.avg)}</td>
+          <td>${duration(x.max)}</td>
+        </tr>
+      `;
+    });
+}
+
+/* ---------- TIPOS ---------- */
+
+function renderTypes(){
+  const map={};
+
+  registros.forEach(r=>{
+    const k=r.tipo||'Sin tipo';
+
+    if(!map[k])map[k]={
+      registros:0,cases:new Set(),sum:0
+    };
+
+    map[k].registros++;
+    map[k].cases.add(norm(r.caso));
+    map[k].sum+=elapsed(r.registro);
+  });
+
+  const backlog=backlogRows();
+  const tb=document.querySelector('#typeTable tbody');
+  tb.innerHTML='';
+
+  Object.entries(map)
+    .sort((a,b)=>b[1].registros-a[1].registros)
+    .forEach(([tipo,x])=>{
+      const backlogCount=backlog.filter(r=>(r.tipo||'Sin tipo')===tipo).length;
+      const cases=[...caseGroups()].length;
+      const latest=latestCaseRows().filter(r=>(r.tipo||'Sin tipo')===tipo);
+      const resolved=latest.filter(r=>isResolved(r.estado)).length;
+
+      tb.innerHTML+=`
+        <tr>
+          <td><b>${esc(tipo)}</b></td>
+          <td>${x.registros}</td>
+          <td>${x.cases.size}</td>
+          <td>${pct(registros.length?x.registros/registros.length:0)}</td>
+          <td>${duration(x.registros?x.sum/x.registros:0)}</td>
+          <td>${backlogCount}</td>
+          <td>${pct(latest.length?resolved/latest.length:0)}</td>
+        </tr>
+      `;
+    });
+}
+
+/* ---------- BACKLOG ---------- */
+
+function renderBacklog(){
+  const tb=document.querySelector('#backlogTable tbody');
+  tb.innerHTML='';
+
+  backlogRows()
+    .sort((a,b)=>a.registro-b.registro)
+    .forEach(r=>{
+      tb.innerHTML+=`
+        <tr class="alerta">
+          <td><b>${esc(r.caso)}</b></td>
+          <td>${esc(r.tipo)}</td>
+          <td><span class="badge badge-yellow">${esc(r.estado||'Sin estado')}</span></td>
+          <td>${esc(r.agente)}</td>
+          <td>${esc(r.gestion||'—')}</td>
+          <td>${fmtDateTime(r.registro)}</td>
+          <td>${duration(elapsed(r.registro))}</td>
+        </tr>
+      `;
+    });
+}
+
+/* ---------- DUPLICADOS ---------- */
+
+function renderDuplicates(){
+  const tb=document.querySelector('#dupTable tbody');
+  tb.innerHTML='';
+
+  duplicateGroups().forEach(arr=>{
+    arr.sort((a,b)=>a.registro-b.registro);
+
+    const gest=[...new Set(arr.map(r=>r.gestion).filter(Boolean))].join(', ')||'—';
+
+    tb.innerHTML+=`
+      <tr>
+        <td><b>${esc(arr[0].caso)}</b></td>
+        <td>${esc(arr[0].agente)}</td>
+        <td><b>${arr.length}</b></td>
+        <td>${esc(gest)}</td>
+        <td>${fmtDateTime(arr[0].registro)}</td>
+        <td>${fmtDateTime(arr[arr.length-1].registro)}</td>
+      </tr>
+    `;
+  });
+}
+
+/* ---------- RESUMEN CASO ---------- */
+
+function renderCases(){
+  const groups=caseGroups();
+  const tb=document.querySelector('#caseTable tbody');
+  tb.innerHTML='';
+
+  Object.values(groups)
+    .sort((a,b)=>b[b.length-1].registro-a[a.length-1].registro)
+    .forEach(arr=>{
+      const r=arr[arr.length-1];
+
+      tb.innerHTML+=`
+        <tr>
+          <td><b>${esc(r.caso)}</b></td>
+          <td>${esc(r.agente)}</td>
+          <td>${esc(r.gestion||'—')}</td>
+          <td>${fmtDateTime(r.registro)}</td>
+          <td>${arr.length}</td>
+          <td>${duration(elapsed(r.registro))}</td>
+        </tr>
+      `;
+    });
+}
+
+/* ---------- RENDER GENERAL ---------- */
+
+function renderAll(){
+  renderCards();
+  renderCharts();
+  renderAgents();
+  renderTypes();
+  renderBacklog();
+  renderDetail();
+  renderDuplicates();
+  renderCases();
+
+  $('lastUpdate').textContent=
+    'Última actualización: '+new Date().toLocaleString('es-CO');
+}
+
+/* ---------- EXPORTACIÓN ---------- */
+
+function exportExcel(){
+  if(!registros.length)return;
+
+  const rows=registros.map(r=>({
+    'Caso':r.caso,
+    'Tipo de caso':r.tipo,
+    'Estado':r.estado,
+    'Fecha':fmtDate(r.fecha),
+    'Hora':fmtTime(r.registro),
+    'Fecha/hora registro':fmtDateTime(r.registro),
+    'Agente':r.agente,
+    'Correo':r.correo,
+    'Tipo de gestión':r.gestion,
+    'Tiempo transcurrido':duration(elapsed(r.registro)),
+    'Horas programadas día':scheduleHours(r.agente,r.registro)
+  }));
+
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Detalle');
+
+  const agentRows=agentStats().map(x=>({
+    'Agente':x.agente,
+    'Registros':x.registros,
+    'Casos únicos':x.cases.size,
+    'Horas programadas':x.hours,
+    'Registros por hora':x.rate,
+    'ICO':x.ico,
+    '% Participación':x.participation,
+    'Eficiencia tipificación':x.typing,
+    'Índice de resolución':x.resolution,
+    'Tiempo promedio':duration(x.sum/x.registros),
+    'Tiempo máximo':duration(x.max)
+  }));
+
+  XLSX.utils.book_append_sheet(
+    wb,XLSX.utils.json_to_sheet(agentRows),'Productividad Agente'
+  );
+
+  const backlog=backlogRows().map(r=>({
+    'Caso':r.caso,
+    'Tipo':r.tipo,
+    'Estado':r.estado,
+    'Agente':r.agente,
+    'Gestión':r.gestion,
+    'Último registro':fmtDateTime(r.registro),
+    'Tiempo backlog':duration(elapsed(r.registro))
+  }));
+
+  XLSX.utils.book_append_sheet(
+    wb,XLSX.utils.json_to_sheet(backlog),'Backlog'
+  );
+
+  XLSX.writeFile(wb,'Productividad_Dashboard_Resultado.xlsx');
+}
+
+/* ---------- EVENTOS ---------- */
+
+$('btnAnalizar').addEventListener('click',processFile);
+
+$('fileInput').addEventListener('change',()=>{
+  if($('fileInput').files[0])processFile();
+});
+
+$('btnActualizar').addEventListener('click',renderAll);
+$('btnExportar').addEventListener('click',exportExcel);
+
+[
+  'searchInput','agentFilter','gestionFilter','estadoFilter','tipoFilter'
+].forEach(id=>{
+  $(id).addEventListener('input',renderDetail);
+  $(id).addEventListener('change',renderDetail);
+});
+
+[
+  'agentKpiFilter','dayKpiFilter','monthKpiFilter','yearKpiFilter'
+].forEach(id=>{
+  $(id).addEventListener('change',renderAgents);
+});
+
+/* Actualiza tiempos de aging cada minuto sin volver a cargar el archivo. */
+setInterval(()=>{
+  if(registros.length){
+    renderCards();
+    renderDetail();
+    renderBacklog();
+    renderCases();
+  }
+},60000);
+</script>
+</body>
+</html>
